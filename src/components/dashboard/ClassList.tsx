@@ -5,14 +5,13 @@ import { useClasses } from "@/hooks/useClasses";
 import { useToast } from "@/components/ui/Toast";
 import { ClassCard } from "./ClassCard";
 import { WeekView } from "./WeekView";
+import { EmptyState } from "./EmptyState";
 import { Button } from "@/components/ui/Button";
-import Link from "next/link";
 
 type FilterTab = "all" | "enabled" | "disabled";
 type ViewMode = "list" | "week";
 
 function detectConflicts(classes: ReturnType<typeof useClasses>["classes"]): Set<string> {
-  // Returns set of classIds that have a time conflict with another class
   const conflictIds = new Set<string>();
 
   interface Slot {
@@ -135,17 +134,7 @@ export function ClassList() {
   }
 
   if (classes.length === 0) {
-    return (
-      <div className="rounded-xl border-2 border-dashed border-sky-200 p-12 text-center">
-        <p className="text-sky-500 text-lg">No classes found</p>
-        <p className="text-sky-400 mt-1">
-          Connect your Canvas account to import your class schedule
-        </p>
-        <Link href="/canvas">
-          <Button size="lg">Connect Canvas</Button>
-        </Link>
-      </div>
-    );
+    return <EmptyState />;
   }
 
   const enabledCount = classes.filter((c) => c.enabled).length;
