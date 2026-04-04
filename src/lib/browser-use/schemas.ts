@@ -11,7 +11,7 @@ export const CourseScheduleSchema = z.object({
 export const ScrapedCourseSchema = z.object({
   canvasId: z.string().describe("Canvas course ID from the URL"),
   name: z.string().describe("Full course name"),
-  code: z.string().describe("Course code, e.g. 'CSE 110'"),
+  code: z.string().optional().describe("Course code, e.g. 'CSE 110'"),
   instructor: z.string().describe("Instructor name"),
   term: z.string().describe("Term, e.g. 'Spring 2026'"),
   schedule: z.array(CourseScheduleSchema),
@@ -41,6 +41,6 @@ const DAY_MAP: Record<string, number> = {
   saturday: 6, sat: 6,
 };
 
-export function dayStringToNumber(day: string): number {
-  return DAY_MAP[day.toLowerCase()] ?? 0;
+export function dayStringToNumber(day: string): number | null {
+  return DAY_MAP[day.toLowerCase()] ?? null;
 }

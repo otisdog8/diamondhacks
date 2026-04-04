@@ -412,20 +412,41 @@ function parseCourses(output: string): ScrapedCourse[] {
   return [];
 }
 
+/** Extract a course code like "COGS 13" from a name like "COGS 13 - Field Methods: Cognition in the Wild" */
+function extractCode(name: string, code?: string): string {
+  if (code) return code;
+  // Match patterns like "CSE 110", "COGS 13", "HUM 2", "VIS 10"
+  const match = name.match(/^([A-Z]{2,5}\s+\d+[A-Z]?)/);
+  return match ? match[1] : name.split(/\s*[-–—:]\s*/)[0].trim();
+}
+
+/** Check if a time string is a valid 24h time like "14:00" or "9:00" (not "varies") */
+function isValidTime(t: string): boolean {
+  return /^\d{1,2}:\d{2}$/.test(t.trim());
+}
+
 async function saveCourses(courses: ScrapedCourse[], userId: string) {
   for (const course of courses) {
-    const schedule: ClassSchedule[] = (course.schedule || []).map((s) => ({
-      dayOfWeek: dayStringToNumber(s.dayOfWeek),
-      startTime: s.startTime,
-      endTime: s.endTime,
-      location: s.location,
-      type: (s.type as ClassSchedule["type"]) || "lecture",
-      recurrence: "weekly",
-    }));
+    // Filter out schedule entries with unparseable days or times
+    const schedule: ClassSchedule[] = (course.schedule || [])
+      .filter((s) => {
+        const dayNum = dayStringToNumber(s.dayOfWeek);
+        if (dayNum === null) return false; // "varies", "varies (TuTh or WF)", etc.
+        if (!isValidTime(s.startTime) || !isValidTime(s.endTime)) return false; // "varies"
+        return true;
+      })
+      .map((s) => ({
+        dayOfWeek: dayStringToNumber(s.dayOfWeek) as number,
+        startTime: s.startTime,
+        endTime: s.endTime,
+        location: s.location,
+        type: (s.type as ClassSchedule["type"]) || "lecture",
+        recurrence: "weekly",
+      }));
 
     const existingClasses = await repo.findClassesByUserId(userId);
     const existing = existingClasses.find(
-      (c) => c.canvasId === course.canvasId || c.code === course.code
+      (c) => c.canvasId === course.canvasId || c.code === resolvedCode
     );
 
     // Resolve quarter dates: scraped values > known UCSD dates > undefined
@@ -433,9 +454,11 @@ async function saveCourses(courses: ScrapedCourse[], userId: string) {
     const quarterStartDate = course.quarterStartDate || fallbackDates?.start;
     const quarterEndDate = course.quarterEndDate || fallbackDates?.end;
 
+    const resolvedCode = extractCode(course.name, course.code);
+
     const classData = {
       name: course.name,
-      code: course.code,
+      code: resolvedCode,
       instructor: course.instructor || "",
       term: course.term || "",
       quarterStartDate,
@@ -469,7 +492,7 @@ async function saveCourses(courses: ScrapedCourse[], userId: string) {
     } else {
       await repo.createClass({
         userId,
-        canvasId: course.canvasId || course.code,
+        canvasId: course.canvasId || resolvedCode,
         enabled: true,
         ...classData,
       });

@@ -138,17 +138,32 @@ export function ClassCard({
               External Links
             </p>
             <div className="mt-1 flex flex-wrap gap-1">
-              {classInfo.externalLinks.slice(0, 5).map((link, i) => (
-                <a
-                  key={i}
-                  href={link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs text-blue-600 hover:underline truncate max-w-[200px]"
-                >
-                  {new URL(link).hostname}
-                </a>
-              ))}
+              {classInfo.externalLinks.slice(0, 5).map((link, i) => {
+                let isUrl = false;
+                let label = link;
+                try {
+                  const u = new URL(link);
+                  isUrl = true;
+                  label = u.hostname;
+                } catch {
+                  // Not a URL — just display the text as-is
+                }
+                return isUrl ? (
+                  <a
+                    key={i}
+                    href={link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-blue-600 hover:underline truncate max-w-[200px]"
+                  >
+                    {label}
+                  </a>
+                ) : (
+                  <span key={i} className="text-xs text-gray-500 truncate max-w-[200px]">
+                    {label}
+                  </span>
+                );
+              })}
               {classInfo.externalLinks.length > 5 && (
                 <span className="text-xs text-gray-400">
                   +{classInfo.externalLinks.length - 5} more
