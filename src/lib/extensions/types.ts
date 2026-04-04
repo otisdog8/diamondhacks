@@ -1,109 +1,135 @@
-// Extensibility interfaces - designed but not implemented
-// Each interface represents a future feature area
+// ============================================================
+// CanvasCal Extension Interfaces
+// All 5 extension providers — drop into src/lib/extensions/types.ts
+// ============================================================
 
-import type { IClassInfo, ClassSchedule } from "@/lib/db/types";
+// ---- Shared ----
 
-// Todo list tracking per class
-export interface Todo {
+export interface ITodo {
   id: string;
+  userId: string;
   classId: string;
   title: string;
   description?: string;
-  dueDate?: Date;
+  dueDate?: string;       // ISO date string
   completed: boolean;
-  priority: "low" | "medium" | "high";
-  source?: "canvas" | "manual";
-  createdAt: Date;
+  source: "canvas" | "manual";
+  canvasAssignmentId?: string;
+  createdAt: string;
 }
 
 export interface ITodoProvider {
-  getTodosForClass(classId: string): Promise<Todo[]>;
-  getAllTodos(userId: string): Promise<Todo[]>;
-  createTodo(classId: string, todo: Omit<Todo, "id" | "createdAt">): Promise<Todo>;
-  toggleTodo(todoId: string): Promise<Todo>;
-  deleteTodo(todoId: string): Promise<void>;
+  getTodosForClass(userId: string, classId: string): Promise<ITodo[]>;
+  getAllTodos(userId: string): Promise<ITodo[]>;
+  createTodo(todo: Omit<ITodo, "id" | "createdAt">): Promise<ITodo>;
+  updateTodo(id: string, updates: Partial<ITodo>): Promise<ITodo | null>;
+  deleteTodo(id: string): Promise<boolean>;
+  syncFromCanvas(userId: string, classId: string, canvasUrl: string): Promise<ITodo[]>;
 }
 
-// Travel time between class locations
-export interface TravelEstimate {
+// ---- Travel Time ----
+
+export interface ITravelSegment {
+  id: string;
+  userId: string;
+  fromClassId: string;
+  toClassId: string;
   fromLocation: string;
   toLocation: string;
-  mode: "walk" | "bike" | "drive" | "transit";
-  durationMinutes: number;
-  distanceMiles: number;
+  walkingMinutes: number;
+  transitMinutes?: number;
+  bufferWarning: boolean;   // true if gap between classes < walkingMinutes + 5min
+  gapMinutes: number;       // actual minutes between end of first and start of second
+  updatedAt: string;
 }
 
 export interface ITravelTimeProvider {
-  calculateTravelTime(
-    from: string,
-    to: string,
-    mode: "walk" | "bike" | "drive" | "transit"
-  ): Promise<TravelEstimate>;
-  getOptimalRoute(schedule: ClassSchedule[]): Promise<TravelEstimate[]>;
+  getSegmentsForUser(userId: string): Promise<ITravelSegment[]>;
+  computeSegments(userId: string): Promise<ITravelSegment[]>;
+  refreshSegment(segmentId: string): Promise<ITravelSegment | null>;
 }
 
-// Reminders via email or phone
-export interface Reminder {
+// ---- Reminders ----
+
+export type ReminderChannel = "email" | "sms";
+export type ReminderStatus = "pending" | "sent" | "failed" | "cancelled";
+
+export interface IReminder {
   id: string;
-  classId: string;
   userId: string;
-  channel: "email" | "sms" | "push";
+  classId: string;
+  channel: ReminderChannel;
   minutesBefore: number;
-  enabled: boolean;
+  destination: string;    // email address or phone number
+  status: ReminderStatus;
+  scheduledFor: string;   // ISO datetime of when to send
+  sentAt?: string;
+  createdAt: string;
 }
 
 export interface IReminderProvider {
-  scheduleReminder(
-    classId: string,
-    userId: string,
-    channel: "email" | "sms" | "push",
-    minutesBefore: number
-  ): Promise<Reminder>;
-  cancelReminder(reminderId: string): Promise<void>;
-  getRemindersForUser(userId: string): Promise<Reminder[]>;
+  getRemindersForUser(userId: string): Promise<IReminder[]>;
+  createReminder(reminder: Omit<IReminder, "id" | "createdAt" | "status">): Promise<IReminder>;
+  updateReminder(id: string, updates: Partial<IReminder>): Promise<IReminder | null>;
+  deleteReminder(id: string): Promise<boolean>;
+  sendReminder(reminderId: string): Promise<boolean>;
+  scheduleRemindersForClass(userId: string, classId: string): Promise<IReminder[]>;
 }
 
-// Textbook retrieval and flashcard generation
-export interface Textbook {
-  title: string;
-  author: string;
-  isbn?: string;
-  url?: string;
-}
+// ---- Study Materials ----
 
-export interface Flashcard {
-  id: string;
+export interface IFlashcard {
   front: string;
   back: string;
-  tags: string[];
-  source: string;
+}
+
+export interface IStudyMaterial {
+  id: string;
+  userId: string;
   classId: string;
+  type: "flashcards" | "summary" | "textbook";
+  title: string;
+  content: string;          // markdown for summaries, JSON string for flashcards
+  flashcards?: IFlashcard[];
+  sourceUrl?: string;
+  generatedAt: string;
 }
 
 export interface IStudyMaterialProvider {
-  findTextbooks(classInfo: IClassInfo): Promise<Textbook[]>;
-  generateFlashcardsFromText(text: string, classId: string): Promise<Flashcard[]>;
-  generateFlashcardsFromUrl(url: string, classId: string): Promise<Flashcard[]>;
+  getMaterialsForClass(userId: string, classId: string): Promise<IStudyMaterial[]>;
+  generateFlashcards(userId: string, classId: string): Promise<IStudyMaterial>;
+  generateSummary(userId: string, classId: string): Promise<IStudyMaterial>;
+  deleteMaterial(id: string): Promise<boolean>;
 }
 
-// Lecture watching with video AI (TwelveLabs)
-export interface VideoIndex {
+// ---- Lecture Provider ----
+
+export interface ILectureSegment {
+  startSeconds: number;
+  endSeconds: number;
+  text: string;
+  topic?: string;
+}
+
+export interface ILecture {
   id: string;
-  videoUrl: string;
-  duration: number;
-  indexedAt: Date;
-}
-
-export interface LectureSummary {
+  userId: string;
+  classId: string;
   title: string;
-  summary: string;
-  keyTopics: string[];
-  timestamps: { time: number; topic: string }[];
+  videoUrl: string;
+  duration?: number;        // seconds
+  transcript?: string;
+  summary?: string;
+  flashcards?: IFlashcard[];
+  segments?: ILectureSegment[];
+  status: "processing" | "ready" | "failed";
+  createdAt: string;
+  processedAt?: string;
 }
 
 export interface ILectureProvider {
-  indexVideo(videoUrl: string, classId: string): Promise<VideoIndex>;
-  generateFlashcardsFromVideo(videoIndexId: string): Promise<Flashcard[]>;
-  summarizeLecture(videoIndexId: string): Promise<LectureSummary>;
-  searchVideo(videoIndexId: string, query: string): Promise<{ time: number; text: string }[]>;
+  getLecturesForClass(userId: string, classId: string): Promise<ILecture[]>;
+  addLecture(userId: string, classId: string, videoUrl: string, title: string): Promise<ILecture>;
+  processLecture(lectureId: string): Promise<ILecture>;
+  deleteLecture(id: string): Promise<boolean>;
 }
