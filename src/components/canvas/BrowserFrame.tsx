@@ -20,16 +20,24 @@ export function BrowserFrame({
           <div className="w-3 h-3 rounded-full bg-green-400" />
         </div>
         <div className="flex-1 text-center">
-          <span className="text-xs text-gray-500 dark:text-gray-400">
+          <span className="text-xs text-gray-500 dark:text-gray-400 font-mono truncate">
             {title}
           </span>
         </div>
+        <a
+          href={src}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs text-blue-500 hover:text-blue-700 hover:underline shrink-0"
+        >
+          Open in new tab
+        </a>
       </div>
       <iframe
         src={src}
         title={title}
         className="w-full h-[600px] bg-white"
-        sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
+        allow="clipboard-read; clipboard-write"
       />
     </div>
   );

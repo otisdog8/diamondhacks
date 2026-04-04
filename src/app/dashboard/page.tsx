@@ -1,6 +1,7 @@
 "use client";
 
 import { ClassList } from "@/components/dashboard/ClassList";
+import { CrawlExternalUrl } from "@/components/dashboard/CrawlExternalUrl";
 import { Button } from "@/components/ui/Button";
 import Link from "next/link";
 
@@ -25,6 +26,7 @@ export default function DashboardPage() {
           </Link>
         </div>
       </div>
+      <CrawlExternalUrl />
       <ClassList />
     </div>
   );

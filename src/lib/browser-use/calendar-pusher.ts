@@ -1,14 +1,16 @@
-import { browserUseApi } from "./client";
+import { getClient } from "./client";
 import { repo } from "@/lib/db";
 import type { IUser } from "@/lib/db/types";
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 export async function startGoogleCalendarSession(user: IUser) {
+  const client = getClient();
+
   let profile = await repo.findProfileByUserAndService(user.id, "google");
 
   if (!profile) {
-    const buProfile = await browserUseApi.profiles.create(`google-${user.username}`);
+    const buProfile = await client.profiles.create({ name: `google-${user.username}` });
     profile = await repo.createProfile({
       userId: user.id,
       profileId: buProfile.id,
@@ -18,28 +20,28 @@ export async function startGoogleCalendarSession(user: IUser) {
     await repo.updateUser(user.id, { googleProfileId: buProfile.id });
   }
 
-  const session = await browserUseApi.sessions.create({ profileId: profile.profileId });
+  // Create session (no task — just get liveUrl fast)
+  const session = await client.sessions.create({
+    profileId: profile.profileId,
+  });
 
   const scrapeSession = await repo.createScrapeSession({
     userId: user.id,
     sessionId: session.id,
-    liveUrl: session.live_url,
+    liveUrl: session.liveUrl ?? "",
     status: "awaiting_login",
     service: "google",
   });
 
-  // Navigate to Google Calendar
-  await browserUseApi.run(
+  // Navigate to Google Calendar in the background
+  void client.run(
     "Navigate to https://calendar.google.com. If there is a login page, stop and wait - the human user will log in manually.",
-    {
-      sessionId: session.id,
-      model: "gemini-3-flash",
-    }
-  );
+    { sessionId: session.id, model: "bu-mini" }
+  ).then(() => {}, (err: unknown) => console.error("[calendar-pusher] Nav task error:", err));
 
   return {
     scrapeSessionId: scrapeSession.id,
-    liveUrl: session.live_url,
+    liveUrl: session.liveUrl ?? "",
     sessionId: session.id,
   };
 }
@@ -48,6 +50,7 @@ export async function exportToGoogleCalendar(
   scrapeSessionId: string,
   user: IUser
 ) {
+  const client = getClient();
   const scrapeSession = await repo.findScrapeSession(scrapeSessionId);
   if (!scrapeSession) throw new Error("Session not found");
 
@@ -73,7 +76,8 @@ export async function exportToGoogleCalendar(
       return `- ${cls.code}: ${cls.name} | Instructor: ${cls.instructor} | Schedule: ${scheduleText}`;
     });
 
-    const result = await browserUseApi.run(
+    // Run export task via the SDK
+    await client.run(
       `You are on Google Calendar. Create recurring calendar events for the following classes.
 For each class, create a separate event for each time slot in the schedule.
 
@@ -94,18 +98,20 @@ Create ALL events. Confirm each one was saved successfully.
 Return a summary of all events created.`,
       {
         sessionId: scrapeSession.sessionId,
-        model: "claude-sonnet-4-6",
+        model: "bu-max",
+        timeout: 600_000,
       }
     );
 
-    await browserUseApi.sessions.stop(scrapeSession.sessionId);
+    // Stop session to persist cookies
+    await client.sessions.stop(scrapeSession.sessionId);
 
     await repo.updateScrapeSession(scrapeSessionId, {
       status: "completed",
       classesFound: enabledClasses.length,
     });
 
-    return { success: true, eventsCreated: enabledClasses.length, result };
+    return { success: true, eventsCreated: enabledClasses.length };
   } catch (error) {
     await repo.updateScrapeSession(scrapeSessionId, {
       status: "failed",

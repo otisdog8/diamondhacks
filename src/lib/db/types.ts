@@ -59,9 +59,12 @@ export interface IScrapeSession {
   sessionId: string; // browser-use session ID
   taskId?: string;
   liveUrl: string;
-  status: "awaiting_login" | "scraping" | "completed" | "failed";
+  status: "connecting" | "awaiting_login" | "scraping" | "needs_login" | "review" | "completed" | "failed";
   service: "canvas" | "google";
   classesFound?: number;
+  stepCount?: number;
+  lastStepSummary?: string;
+  rawOutput?: string; // agent's full output text for review
   error?: string;
   createdAt: Date;
   expiresAt: Date;

@@ -152,7 +152,7 @@ export class JsonRepository implements IRepository {
         (s) =>
           s.userId === userId &&
           s.service === service &&
-          (s.status === "awaiting_login" || s.status === "scraping") &&
+          (s.status === "connecting" || s.status === "awaiting_login" || s.status === "scraping" || s.status === "needs_login" || s.status === "review") &&
           new Date(s.expiresAt) > new Date()
       ) ?? null
     );
