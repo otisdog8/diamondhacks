@@ -28,6 +28,8 @@ export interface IClassInfo {
   code: string; // e.g. "CSE 110"
   instructor: string;
   term: string; // e.g. "Spring 2026"
+  quarterStartDate?: string; // ISO date "2026-03-30" — first day of instruction
+  quarterEndDate?: string; // ISO date "2026-06-12" — last day of instruction
   enabled: boolean; // toggle for calendar export
 
   schedule: ClassSchedule[];

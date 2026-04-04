@@ -1,5 +1,6 @@
 import { google } from "googleapis";
 import type { IClassInfo } from "@/lib/db/types";
+import { getQuarterDates, inferQuarterWeeks, getFirstDayInQuarter } from "@/lib/quarter-dates";
 
 const DAY_MAP: Record<number, string> = {
   0: "SU", 1: "MO", 2: "TU", 3: "WE", 4: "TH", 5: "FR", 6: "SA",
@@ -17,12 +18,10 @@ function getOAuth2Client() {
   return new google.auth.OAuth2(clientId, clientSecret, `${appUrl}/api/calendar/callback`);
 }
 
-/** Returns true if Google OAuth credentials are configured */
 export function isGoogleApiConfigured(): boolean {
   return !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
 }
 
-/** Generate the Google OAuth2 consent URL */
 export function getAuthUrl(state?: string): string | null {
   const client = getOAuth2Client();
   if (!client) return null;
@@ -38,7 +37,6 @@ export function getAuthUrl(state?: string): string | null {
   });
 }
 
-/** Exchange an authorization code for tokens */
 export async function exchangeCode(code: string): Promise<{ refreshToken: string }> {
   const client = getOAuth2Client();
   if (!client) throw new Error("Google OAuth not configured");
@@ -75,34 +73,98 @@ export async function listCalendars(refreshToken: string): Promise<
   }));
 }
 
-/** Find the next occurrence of a given day of the week */
-function nextDayOfWeek(dayOfWeek: number): Date {
+// ── Event fetching ──────────────────────────────────────────────
+
+export interface GoogleCalendarEvent {
+  id: string;
+  summary: string;
+  description?: string;
+  location?: string;
+  start: string; // ISO datetime
+  end: string;
+  allDay: boolean;
+  recurringEventId?: string;
+  colorId?: string;
+}
+
+/** Fetch events from a Google Calendar within a time range */
+export async function fetchCalendarEvents(
+  refreshToken: string,
+  calendarId: string = "primary",
+  timeMin?: string,
+  timeMax?: string,
+): Promise<GoogleCalendarEvent[]> {
+  const auth = getAuthedClient(refreshToken);
+  const calendar = google.calendar({ version: "v3", auth });
+
   const now = new Date();
-  const diff = (dayOfWeek - now.getDay() + 7) % 7 || 7;
-  const next = new Date(now);
-  next.setDate(now.getDate() + diff);
-  return next;
+  const defaultMin = new Date(now);
+  defaultMin.setDate(defaultMin.getDate() - 14); // 2 weeks ago
+  const defaultMax = new Date(now);
+  defaultMax.setDate(defaultMax.getDate() + 12 * 7); // 12 weeks out
+
+  const events: GoogleCalendarEvent[] = [];
+  let pageToken: string | undefined;
+
+  do {
+    const res = await calendar.events.list({
+      calendarId,
+      timeMin: timeMin || defaultMin.toISOString(),
+      timeMax: timeMax || defaultMax.toISOString(),
+      singleEvents: true,
+      orderBy: "startTime",
+      maxResults: 250,
+      pageToken,
+    });
+
+    for (const item of res.data.items || []) {
+      const allDay = !!(item.start?.date && !item.start?.dateTime);
+      events.push({
+        id: item.id || "",
+        summary: item.summary || "",
+        description: item.description || undefined,
+        location: item.location || undefined,
+        start: item.start?.dateTime || item.start?.date || "",
+        end: item.end?.dateTime || item.end?.date || "",
+        allDay,
+        recurringEventId: item.recurringEventId || undefined,
+        colorId: item.colorId || undefined,
+      });
+    }
+
+    pageToken = res.data.nextPageToken || undefined;
+  } while (pageToken);
+
+  return events;
+}
+
+// ── Event export ────────────────────────────────────────────────
+
+/**
+ * Resolve the quarter start date for a class.
+ * Priority: class field > known UCSD dates > today.
+ */
+function resolveQuarterStart(cls: IClassInfo): string {
+  if (cls.quarterStartDate) return cls.quarterStartDate;
+  const known = getQuarterDates(cls.term);
+  if (known) return known.start;
+  // Fallback: today (not ideal, but better than crashing)
+  return new Date().toISOString().split("T")[0];
 }
 
 /**
  * Export classes to a specific Google Calendar.
- * @param calendarId — the calendar to add events to ("primary" or a specific ID)
+ * Uses quarter start date for first event and COUNT for recurrence.
  */
 export async function exportClassesToCalendar(
   refreshToken: string,
   classes: IClassInfo[],
   calendarId: string = "primary",
-  quarterEndDate?: string,
 ): Promise<{ eventsCreated: number; errors: string[] }> {
   const auth = getAuthedClient(refreshToken);
   const calendar = google.calendar({ version: "v3", auth });
   const errors: string[] = [];
   let eventsCreated = 0;
-
-  const endDate = quarterEndDate
-    ? new Date(quarterEndDate)
-    : new Date(Date.now() + 10 * 7 * 24 * 60 * 60 * 1000);
-  const untilStr = endDate.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
 
   // Get user's timezone
   let timeZone = "America/Los_Angeles";
@@ -114,13 +176,15 @@ export async function exportClassesToCalendar(
   for (let i = 0; i < classes.length; i++) {
     const cls = classes[i];
     const colorId = CALENDAR_COLORS[i % CALENDAR_COLORS.length];
+    const quarterStart = resolveQuarterStart(cls);
+    const weeks = inferQuarterWeeks(cls.term);
 
     for (const slot of cls.schedule) {
       const rruleDay = DAY_MAP[slot.dayOfWeek];
       if (!rruleDay) continue;
 
-      const firstDate = nextDayOfWeek(slot.dayOfWeek);
-      const dateStr = firstDate.toISOString().split("T")[0];
+      // First occurrence of this day of week on or after quarter start
+      const firstDate = getFirstDayInQuarter(quarterStart, slot.dayOfWeek);
 
       try {
         await calendar.events.insert({
@@ -134,9 +198,9 @@ export async function exportClassesToCalendar(
             ].filter(Boolean).join("\n"),
             location: slot.location || undefined,
             colorId,
-            start: { dateTime: `${dateStr}T${slot.startTime}:00`, timeZone },
-            end: { dateTime: `${dateStr}T${slot.endTime}:00`, timeZone },
-            recurrence: [`RRULE:FREQ=WEEKLY;BYDAY=${rruleDay};UNTIL=${untilStr}`],
+            start: { dateTime: `${firstDate}T${slot.startTime}:00`, timeZone },
+            end: { dateTime: `${firstDate}T${slot.endTime}:00`, timeZone },
+            recurrence: [`RRULE:FREQ=WEEKLY;BYDAY=${rruleDay};COUNT=${weeks}`],
           },
         });
         eventsCreated++;

@@ -19,6 +19,8 @@ export interface ClassInfo {
   code: string;
   instructor: string;
   term: string;
+  quarterStartDate?: string;
+  quarterEndDate?: string;
   enabled: boolean;
   schedule: ClassSchedule[];
   rawData: Record<string, unknown>;

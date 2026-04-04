@@ -15,6 +15,8 @@ export const ScrapedCourseSchema = z.object({
   instructor: z.string().describe("Instructor name"),
   term: z.string().describe("Term, e.g. 'Spring 2026'"),
   schedule: z.array(CourseScheduleSchema),
+  quarterStartDate: z.string().optional().describe("First day of instruction for this term, ISO format YYYY-MM-DD if found"),
+  quarterEndDate: z.string().optional().describe("Last day of instruction for this term, ISO format YYYY-MM-DD if found"),
   syllabusText: z.string().optional().describe("Full syllabus text if available"),
   syllabusUrl: z.string().optional().describe("URL to syllabus"),
   externalLinks: z.array(z.string()).describe("All external links found"),

@@ -8,64 +8,148 @@ import { CalendarWeekView } from "./CalendarWeekView";
 import { CalendarDayView } from "./CalendarDayView";
 import { TimeSelectionModal } from "./TimeSelectionModal";
 import { useClasses } from "@/hooks/useClasses";
+import { useGoogleCalendarEvents } from "@/hooks/useGoogleCalendarEvents";
+import { getQuarterDates, inferQuarterWeeks, getFirstDayInQuarter } from "@/lib/quarter-dates";
 import type { CalendarView, EventType, CalendarEvent } from "./types";
 import type { NewCalendarEvent } from "./TimeSelectionModal";
 
-function productivityToCalendarEvents(
+function parseT(t: string, base: Date): Date {
+  const m = t.trim().match(/^(\d+):(\d+)\s*(am|pm)?$/i);
+  if (!m) return base;
+  let h = parseInt(m[1]);
+  const min = parseInt(m[2]);
+  const p = m[3]?.toLowerCase();
+  if (p === "pm" && h !== 12) h += 12;
+  if (p === "am" && h === 12) h = 0;
+  const d = new Date(base);
+  d.setHours(h, min, 0, 0);
+  return d;
+}
+
+/**
+ * Generate CalendarEvents from class schedules using real quarter dates.
+ * Falls back to relative weeks if no quarter dates are available.
+ */
+function classesToCalendarEvents(
   classes: ReturnType<typeof useClasses>["classes"]
 ): CalendarEvent[] {
   const events: CalendarEvent[] = [];
-  const today = new Date();
 
-  const mon = new Date(today);
-  const dow = mon.getDay();
-  mon.setDate(mon.getDate() - (dow === 0 ? 6 : dow - 1));
-  mon.setHours(0, 0, 0, 0);
+  for (const cls of classes) {
+    // Resolve quarter start date
+    let quarterStart = cls.quarterStartDate;
+    if (!quarterStart) {
+      const known = getQuarterDates(cls.term);
+      quarterStart = known?.start;
+    }
 
-  function parseT(t: string, base: Date): Date {
-    const m = t.trim().match(/^(\d+):(\d+)\s*(am|pm)?$/i);
-    if (!m) return base;
-    let h = parseInt(m[1]);
-    const min = parseInt(m[2]);
-    const p = m[3]?.toLowerCase();
-    if (p === "pm" && h !== 12) h += 12;
-    if (p === "am" && h === 12) h = 0;
-    const d = new Date(base);
-    d.setHours(h, min, 0, 0);
-    return d;
-  }
+    const weeks = inferQuarterWeeks(cls.term);
 
-  for (let weekOffset = -1; weekOffset <= 3; weekOffset++) {
-    classes.forEach((cls) => {
-      cls.schedule.forEach((slot, i) => {
-        const dayOffset = slot.dayOfWeek === 0 ? 6 : slot.dayOfWeek - 1;
-        const date = new Date(mon);
-        date.setDate(mon.getDate() + weekOffset * 7 + dayOffset);
+    for (const slot of cls.schedule) {
+      const type: EventType = slot.type?.toLowerCase().includes("lab")
+        ? "lab"
+        : slot.type?.toLowerCase().includes("disc")
+        ? "discussion"
+        : "lecture";
 
-        const type: EventType = slot.type?.toLowerCase().includes("lab")
-          ? "lab"
-          : slot.type?.toLowerCase().includes("disc")
-          ? "discussion"
-          : "lecture";
+      if (quarterStart) {
+        // Use actual quarter dates
+        const firstDateStr = getFirstDayInQuarter(quarterStart, slot.dayOfWeek);
+        const firstDate = new Date(firstDateStr + "T00:00:00");
 
-        events.push({
-          id: `cls-${cls.id}-${i}-w${weekOffset}`,
-          title: cls.code,
-          classCode: cls.code,
-          startTime: parseT(slot.startTime, date),
-          endTime: parseT(slot.endTime, date),
-          type,
-          location: slot.location,
-          description: cls.name,
-        });
-      });
-    });
+        for (let week = 0; week < weeks; week++) {
+          const date = new Date(firstDate);
+          date.setDate(firstDate.getDate() + week * 7);
+
+          events.push({
+            id: `cls-${cls.id}-${slot.dayOfWeek}-${slot.type}-w${week}`,
+            title: cls.code,
+            classCode: cls.code,
+            startTime: parseT(slot.startTime, date),
+            endTime: parseT(slot.endTime, date),
+            type,
+            location: slot.location,
+            description: cls.name,
+          });
+        }
+      } else {
+        // Fallback: relative to current week (-1 to +3 weeks)
+        const today = new Date();
+        const mon = new Date(today);
+        const dow = mon.getDay();
+        mon.setDate(mon.getDate() - (dow === 0 ? 6 : dow - 1));
+        mon.setHours(0, 0, 0, 0);
+
+        for (let weekOffset = -1; weekOffset <= 3; weekOffset++) {
+          const dayOffset = slot.dayOfWeek === 0 ? 6 : slot.dayOfWeek - 1;
+          const date = new Date(mon);
+          date.setDate(mon.getDate() + weekOffset * 7 + dayOffset);
+
+          events.push({
+            id: `cls-${cls.id}-${slot.dayOfWeek}-${slot.type}-w${weekOffset}`,
+            title: cls.code,
+            classCode: cls.code,
+            startTime: parseT(slot.startTime, date),
+            endTime: parseT(slot.endTime, date),
+            type,
+            location: slot.location,
+            description: cls.name,
+          });
+        }
+      }
+    }
   }
 
   return events;
 }
 
-export function CalendarLayout() {
+/**
+ * Convert Google Calendar events to our CalendarEvent format.
+ * Tries to match against known class codes to use proper type styling.
+ */
+function googleEventsToCalendarEvents(
+  googleEvents: ReturnType<typeof useGoogleCalendarEvents>["events"],
+  classCodes: Set<string>,
+): CalendarEvent[] {
+  return googleEvents
+    .filter((ge) => ge.start && ge.end && !ge.allDay)
+    .map((ge) => {
+      // Try to match to a class code
+      const summary = ge.summary || "";
+      let type: EventType = "google";
+      let classCode: string | undefined;
+
+      for (const code of classCodes) {
+        if (summary.toLowerCase().includes(code.toLowerCase())) {
+          classCode = code;
+          type = summary.toLowerCase().includes("lab")
+            ? "lab"
+            : summary.toLowerCase().includes("disc")
+            ? "discussion"
+            : "lecture";
+          break;
+        }
+      }
+
+      return {
+        id: `gcal-${ge.id}`,
+        title: summary,
+        classCode,
+        startTime: new Date(ge.start),
+        endTime: new Date(ge.end),
+        type,
+        location: ge.location,
+        description: ge.description,
+      };
+    });
+}
+
+interface CalendarLayoutProps {
+  /** If true, show Google Calendar events alongside class events */
+  showGoogleEvents?: boolean;
+}
+
+export function CalendarLayout({ showGoogleEvents = true }: CalendarLayoutProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<CalendarView>("week");
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
@@ -74,10 +158,46 @@ export function CalendarLayout() {
   const [userEvents, setUserEvents] = useState<CalendarEvent[]>([]);
 
   const { classes } = useClasses();
+  const { events: googleEvents, connected: googleConnected } = useGoogleCalendarEvents();
 
-  const baseEvents = useMemo<CalendarEvent[]>(() => {
-    return productivityToCalendarEvents(classes);
-  }, [classes]);
+  const classCodes = useMemo(
+    () => new Set(classes.map((c) => c.code)),
+    [classes]
+  );
+
+  const classEvents = useMemo(
+    () => classesToCalendarEvents(classes),
+    [classes]
+  );
+
+  const gCalEvents = useMemo(() => {
+    if (!showGoogleEvents || !googleConnected) return [];
+    return googleEventsToCalendarEvents(googleEvents, classCodes);
+  }, [showGoogleEvents, googleConnected, googleEvents, classCodes]);
+
+  // When Google events are loaded, deduplicate: if a Google event matches a class code,
+  // prefer the Google version (it has the real calendar data)
+  const baseEvents = useMemo(() => {
+    if (gCalEvents.length === 0) return classEvents;
+
+    // Build a set of (classCode, date, hour) keys from Google events
+    const gCalKeys = new Set<string>();
+    for (const ge of gCalEvents) {
+      if (ge.classCode) {
+        const key = `${ge.classCode}-${ge.startTime.toISOString().split("T")[0]}-${ge.startTime.getHours()}`;
+        gCalKeys.add(key);
+      }
+    }
+
+    // Filter out local class events that are duplicated in Google Calendar
+    const deduped = classEvents.filter((ce) => {
+      if (!ce.classCode) return true;
+      const key = `${ce.classCode}-${ce.startTime.toISOString().split("T")[0]}-${ce.startTime.getHours()}`;
+      return !gCalKeys.has(key);
+    });
+
+    return [...deduped, ...gCalEvents];
+  }, [classEvents, gCalEvents]);
 
   const allEvents = useMemo(
     () => [...baseEvents, ...userEvents],
@@ -123,7 +243,6 @@ export function CalendarLayout() {
     };
     setUserEvents((prev) => [...prev, event]);
     setSelectedEventId(event.id);
-    // Navigate to the day of the new event
     setCurrentDate(newEvent.startTime);
     if (view === "month") setView("day");
     setShowAddModal(false);

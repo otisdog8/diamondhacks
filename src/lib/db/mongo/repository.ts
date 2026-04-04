@@ -34,6 +34,8 @@ function docToClass(doc: Record<string, unknown>): IClassInfo {
     code: d.code as string,
     instructor: d.instructor as string,
     term: d.term as string,
+    quarterStartDate: d.quarterStartDate as string | undefined,
+    quarterEndDate: d.quarterEndDate as string | undefined,
     enabled: d.enabled as boolean,
     schedule: d.schedule as IClassInfo["schedule"],
     rawData: (d.rawData as Record<string, unknown>) ?? {},

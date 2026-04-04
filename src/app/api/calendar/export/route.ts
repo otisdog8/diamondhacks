@@ -6,9 +6,10 @@ import { exportToGoogleCalendar } from "@/lib/browser-use/calendar-pusher";
 /**
  * POST /api/calendar/export
  *
- * Body: { calendarId?, quarterEndDate?, scrapeSessionId? }
+ * Body: { calendarId?, scrapeSessionId? }
  *
  * Uses Google Calendar API if the user has OAuth tokens.
+ * Quarter dates are read from class data (set by the scraper).
  * Falls back to Browser Use if scrapeSessionId is provided.
  */
 export const POST = withAuth(async (req, user) => {
@@ -28,7 +29,6 @@ export const POST = withAuth(async (req, user) => {
           user.googleRefreshToken,
           enabledClasses,
           body.calendarId || "primary",
-          body.quarterEndDate,
         );
         return Response.json({
           success: true,

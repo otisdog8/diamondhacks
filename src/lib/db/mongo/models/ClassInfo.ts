@@ -8,6 +8,8 @@ export interface ClassInfoDoc extends Document {
   code: string;
   instructor: string;
   term: string;
+  quarterStartDate?: string;
+  quarterEndDate?: string;
   enabled: boolean;
   schedule: ClassSchedule[];
   rawData: Record<string, unknown>;
@@ -44,6 +46,8 @@ const ClassInfoSchema = new Schema<ClassInfoDoc>(
     code: { type: String, required: true },
     instructor: { type: String, default: "" },
     term: { type: String, default: "" },
+    quarterStartDate: { type: String },
+    quarterEndDate: { type: String },
     enabled: { type: Boolean, default: true },
     schedule: { type: [ScheduleSchema], default: [] },
     rawData: { type: Schema.Types.Mixed, default: {} },

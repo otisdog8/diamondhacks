@@ -3,6 +3,7 @@ import { dayStringToNumber } from "./schemas";
 import type { ScrapedCourse } from "./schemas";
 import { repo } from "@/lib/db";
 import type { IUser, ClassSchedule } from "@/lib/db/types";
+import { getQuarterDates } from "@/lib/quarter-dates";
 
 /**
  * Step 1: Create a Browser Use session and return the liveUrl immediately.
@@ -76,19 +77,23 @@ const SCRAPE_PROMPT = (canvasUrl: string) => `You are on Canvas LMS at ${canvasU
    - Check the Syllabus page for schedule details, office hours, and any links
    - Check the Modules page for any external links or resources
    - Check the Home page for any additional info
-3. Follow ALL external links you find (up to 2 clicks deep) to gather more info
+3. Find the quarter/term start and end dates:
+   - Check the Canvas calendar, academic calendar link, syllabus, or any "Important Dates" section
+   - Extract the first day of instruction and last day of instruction for the current term
+   - Return these as quarterStartDate and quarterEndDate in YYYY-MM-DD format
+4. Follow ALL external links you find (up to 2 clicks deep) to gather more info
    - Some classes host content on Piazza, Ed Discussion, Gradescope, personal websites, etc.
    - CRITICAL: You MUST actually CLICK links/buttons on the page rather than navigating to URLs directly.
      Canvas uses SSO passthrough — clicking a Piazza/Gradescope/Ed link FROM a Canvas page will
      automatically authenticate you. Navigating to the URL directly will NOT work and will show a login page.
      Always click the link element on the page, never use direct URL navigation for external tools.
    - Extract any schedule, office hours, or meeting info from these sites
-4. OVER-DOCUMENT: capture everything you find, even if it seems minor
+5. OVER-DOCUMENT: capture everything you find, even if it seems minor
 
 IMPORTANT: If you encounter a login page on ANY site (including Canvas SSO), STOP immediately and return what you have so far as JSON. Do NOT try to log in yourself — the user will handle that.
 
 CRITICAL: Your FINAL response must be ONLY the JSON object below — no other text, no file saving, no workspace operations. Just output the raw JSON directly as your response:
-{ "courses": [{ "canvasId": "...", "name": "...", "code": "...", "instructor": "...", "term": "...", "schedule": [{"dayOfWeek": "Monday", "startTime": "14:00", "endTime": "15:20", "location": "WLH 2001", "type": "lecture"}], "syllabusText": "...", "syllabusUrl": "...", "externalLinks": ["..."], "description": "...", "rawNotes": "everything else you found" }] }
+{ "courses": [{ "canvasId": "...", "name": "...", "code": "...", "instructor": "...", "term": "...", "quarterStartDate": "2026-03-30", "quarterEndDate": "2026-06-06", "schedule": [{"dayOfWeek": "Monday", "startTime": "14:00", "endTime": "15:20", "location": "WLH 2001", "type": "lecture"}], "syllabusText": "...", "syllabusUrl": "...", "externalLinks": ["..."], "description": "...", "rawNotes": "everything else you found" }] }
 
 Do NOT save to a file. Do NOT use workspace. Return the JSON directly in your output.`;
 
@@ -107,7 +112,7 @@ const DEEPER_PROMPT = (canvasUrl: string) => `You previously scraped Canvas at $
 
 Return ALL data as JSON in your output. Include everything you found previously plus new discoveries.
 CRITICAL: Your FINAL response must be ONLY the JSON object — no file saving, no workspace. Format:
-{ "courses": [{ "canvasId": "...", "name": "...", "code": "...", "instructor": "...", "term": "...", "schedule": [{"dayOfWeek": "Monday", "startTime": "14:00", "endTime": "15:20", "location": "WLH 2001", "type": "lecture"}], "syllabusText": "...", "syllabusUrl": "...", "externalLinks": ["..."], "description": "...", "rawNotes": "everything else you found" }] }`;
+{ "courses": [{ "canvasId": "...", "name": "...", "code": "...", "instructor": "...", "term": "...", "quarterStartDate": "2026-03-30", "quarterEndDate": "2026-06-06", "schedule": [{"dayOfWeek": "Monday", "startTime": "14:00", "endTime": "15:20", "location": "WLH 2001", "type": "lecture"}], "syllabusText": "...", "syllabusUrl": "...", "externalLinks": ["..."], "description": "...", "rawNotes": "everything else you found" }] }`;
 
 const EXTERNAL_URL_PROMPT = (externalUrl: string) => `The user wants you to crawl an external class website to extract course information.
 
@@ -423,11 +428,18 @@ async function saveCourses(courses: ScrapedCourse[], userId: string) {
       (c) => c.canvasId === course.canvasId || c.code === course.code
     );
 
+    // Resolve quarter dates: scraped values > known UCSD dates > undefined
+    const fallbackDates = getQuarterDates(course.term || "");
+    const quarterStartDate = course.quarterStartDate || fallbackDates?.start;
+    const quarterEndDate = course.quarterEndDate || fallbackDates?.end;
+
     const classData = {
       name: course.name,
       code: course.code,
       instructor: course.instructor || "",
       term: course.term || "",
+      quarterStartDate,
+      quarterEndDate,
       schedule,
       rawData: {
         syllabusText: course.syllabusText,

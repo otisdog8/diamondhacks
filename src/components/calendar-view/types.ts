@@ -5,7 +5,8 @@ export type EventType =
   | "study"
   | "task"
   | "reminder"
-  | "personal";
+  | "personal"
+  | "google";
 
 export type CalendarView = "month" | "week" | "day";
 
@@ -67,6 +68,12 @@ export const EVENT_STYLE: Record<
     dot: "bg-slate-300",
     pill: "bg-white text-slate-500",
     label: "Personal",
+  },
+  google: {
+    card: "bg-emerald-50/80 border-l-2 border-l-emerald-300 text-emerald-700",
+    dot: "bg-emerald-300",
+    pill: "bg-emerald-50 text-emerald-600",
+    label: "Google Calendar",
   },
 };
 
