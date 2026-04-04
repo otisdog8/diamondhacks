@@ -12,8 +12,8 @@ importers:
         specifier: ^3.0.3
         version: 3.0.3
       browser-use-sdk:
-        specifier: ^3.4.1
-        version: 3.4.1
+        specifier: ^3.4.0
+        version: 3.4.0
       cookie:
         specifier: ^1.1.1
         version: 1.1.1
@@ -863,8 +863,8 @@ packages:
     resolution: {integrity: sha512-yQbXgO/OSZVD2IsiLlro+7Hf6Q18EJrKSEsdoMzKePKXct3gvD8oLcOQdIzGupr5Fj+EDe8gO/lxc1BzfMpxvA==}
     engines: {node: '>=8'}
 
-  browser-use-sdk@3.4.1:
-    resolution: {integrity: sha512-iMylu2cjbuNsdNYXTYEDqypMWZNEkOMrveqLvPfLJJ1AEpL6jBgWJJUFOaXIagdWnsW93zcRTjpAsyQOfKVz8w==}
+  browser-use-sdk@3.4.0:
+    resolution: {integrity: sha512-8VVu9aYxijtnje9t1T2N5NLIunv+VEqUed3Jyq4XKYGo5gstBfx/cddiucEG3gUhETNrZIEYEOxYyuBl166aMg==}
 
   browserslist@4.28.2:
     resolution: {integrity: sha512-48xSriZYYg+8qXna9kwqjIVzuQxi+KYWp2+5nCYnYKPTr0LvD89Jqk2Or5ogxz0NUMfIjhh2lIUX/LyX9B4oIg==}
@@ -2872,7 +2872,7 @@ snapshots:
     dependencies:
       fill-range: 7.1.1
 
-  browser-use-sdk@3.4.1:
+  browser-use-sdk@3.4.0:
     dependencies:
       dotenv: 17.4.0
       zod: 4.3.6

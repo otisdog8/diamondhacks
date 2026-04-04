@@ -181,7 +181,7 @@ export class MongoRepository implements IRepository {
       if (
         session.userId === userId &&
         session.service === service &&
-        (session.status === "awaiting_login" || session.status === "scraping") &&
+        (session.status === "connecting" || session.status === "awaiting_login" || session.status === "scraping" || session.status === "needs_login" || session.status === "review") &&
         new Date(session.expiresAt) > new Date()
       ) {
         return session;

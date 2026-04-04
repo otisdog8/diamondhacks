@@ -42,15 +42,15 @@ src/
 │   │   ├── jwt.ts                # signToken(), verifyToken() using jsonwebtoken
 │   │   └── middleware.ts         # withAuth() — wraps route handlers with auth check
 │   ├── browser-use/
-│   │   ├── client.ts             # browserUseApi — REST client for Browser Use Cloud API
-│   │   ├── canvas-scraper.ts     # startCanvasSession(), runCanvasScrape()
+│   │   ├── client.ts             # getClient() — BrowserUse SDK v3 singleton
+│   │   ├── canvas-scraper.ts     # Canvas import + external crawl lifecycle (7 exports)
 │   │   ├── calendar-pusher.ts    # startGoogleCalendarSession(), exportToGoogleCalendar()
 │   │   └── schemas.ts           # Zod schemas for scrape output parsing
 │   └── extensions/types.ts       # Unimplemented interfaces: ITodoProvider, ITravelTimeProvider, IReminderProvider, IStudyMaterialProvider, ILectureProvider
 ├── components/
 │   ├── ui/{Button,Input,Card,Toggle}.tsx               # Reusable UI primitives
 │   ├── auth/{LoginForm,RegisterForm}.tsx                # Auth form components
-│   ├── dashboard/{ClassCard,ClassList}.tsx              # Class display components
+│   ├── dashboard/{ClassCard,ClassList,CrawlExternalUrl}.tsx  # Class display + external crawl
 │   ├── canvas/{BrowserFrame,ConnectionWizard}.tsx       # Canvas import UI
 │   └── calendar/CalendarExport.tsx                      # Calendar export UI
 ├── hooks/
@@ -68,13 +68,38 @@ src/
 3. Protected routes use `withAuth()` which reads cookie, verifies JWT, loads user from repo
 4. Frontend uses `useAuth()` hook from `AuthContext` for login state
 
-### Canvas import flow
-1. `POST /api/canvas/connect` → creates Browser Use profile + session → returns `liveUrl` (iframe URL)
-2. User logs into Canvas through the iframe (human-in-the-loop)
-3. User clicks "I'm logged in" → `POST /api/canvas/status` triggers `runCanvasScrape()`
-4. AI agent navigates Canvas courses, follows external links, extracts structured data
-5. Parsed courses saved as `IClassInfo` records via `repo.createClass()`/`repo.updateClass()`
-6. Session stopped to persist profile cookies for future use
+### Canvas import flow (lifecycle)
+```
+connecting → awaiting_login → scraping → review → completed
+                                  ↓          ↗
+                             needs_login → scraping (resume)
+```
+
+1. `POST /api/canvas/connect` → reuses existing active session or creates Browser Use profile + session → returns `liveUrl`
+2. Agent navigates to Canvas (status: `connecting`). Frontend polls `GET /api/canvas/status` for progress.
+3. Agent reaches login page → status becomes `awaiting_login`. User sees iframe.
+4. User logs into Canvas through the iframe (human-in-the-loop)
+5. User clicks "I'm logged in" → `POST /api/canvas/status` `{action: "start"}` triggers `runCanvasScrape()`
+6. AI agent navigates Canvas courses, clicks external links from within Canvas (SSO passthrough), extracts structured data. Steps stream to frontend via polling.
+7. If agent hits an external login wall → status: `needs_login`. User logs in, clicks "Continue" → `{action: "resume"}`.
+8. Scrape finishes → status: `review`. User sees results summary, raw agent output, and can:
+   - **Confirm** (`{action: "confirm"}`) → saves cookies, marks `completed`
+   - **Search Harder** (`{action: "deeper"}`) → sends deeper prompt to same session
+   - **Discard** (`DELETE /api/canvas/connect`) → kills session, resets
+9. Session stopped only on confirm/discard to persist profile cookies for future use
+
+### External URL crawl (from dashboard)
+Bypasses Canvas entirely — creates a fresh BU session and goes straight to the target URL.
+
+1. `POST /api/canvas/connect` `{action: "crawl", externalUrl: "..."}` → discards any active session, creates new one, starts crawl
+2. `CrawlExternalUrl` component on the dashboard polls progress inline
+3. Same review/confirm/discard flow as Canvas scrape
+4. If the site needs login, agent pauses → user logs in via iframe → resumes
+
+**Key prompt rules for the scrape agent:**
+- Must CLICK link elements on Canvas pages, not navigate to URLs directly (SSO passthrough)
+- Must return raw JSON as output, not save to workspace files
+- Must STOP if it encounters a login page and return what it has so far
 
 ### Calendar export flow
 1. `POST /api/calendar/connect` → similar profile + session setup for Google
@@ -94,17 +119,29 @@ export const GET = withAuth(async (_req, user) => {
 });
 ```
 
-### Browser Use API call
+### Browser Use SDK (v3)
 ```typescript
-import { browserUseApi } from "@/lib/browser-use/client";
+import { getClient } from "@/lib/browser-use/client";
 
-const session = await browserUseApi.sessions.create({ profileId: "..." });
-const result = await browserUseApi.run("task description", {
+const client = getClient(); // BrowserUse instance from browser-use-sdk/v3
+
+// Create a session (returns immediately with liveUrl)
+const session = await client.sessions.create({ profileId: "..." });
+// session.liveUrl — embed in iframe for human-in-the-loop
+
+// Run a task in the session — await resolves when the agent finishes
+const result = await client.run("Extract data from this page", {
   sessionId: session.id,
-  model: "claude-sonnet-4-6",  // or "gemini-3-flash" for simple tasks
+  model: "bu-max",     // bu-mini (cheap), bu-max (default), bu-ultra (best)
+  keepAlive: true,
 });
-await browserUseApi.sessions.stop(session.id); // persist cookies
+console.log(result.output); // string output from the agent
+
+// Stop session to persist profile cookies
+await client.sessions.stop(session.id);
 ```
+
+**SDK notes**: Import from `browser-use-sdk/v3` (not the default export which is v2). Pinned to 3.4.0 (3.4.1 ships without dist). Model tiers: `bu-mini`, `bu-max`, `bu-ultra`.
 
 ### Adding to the data layer
 1. Define interface in `src/lib/db/types.ts`
@@ -121,7 +158,7 @@ await browserUseApi.sessions.stop(session.id); // persist cookies
 
 ## Known limitations
 
-- The `browser-use-sdk` npm package is installed but has no dist files. Use `browserUseApi` from `src/lib/browser-use/client.ts` instead.
+- `browser-use-sdk` is pinned to **3.4.0** (3.4.1 has no dist files). Always import from `browser-use-sdk/v3`. Use `getClient()` from `src/lib/browser-use/client.ts`.
 - Next.js 16 shows a deprecation warning for `middleware.ts` (recommends `proxy`). It still works.
 - Zod v4: import as `import { z } from "zod/v4"`.
 - Browser Use sessions timeout after 15 minutes of inactivity (4 hours max).

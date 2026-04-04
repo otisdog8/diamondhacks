@@ -10,7 +10,7 @@ A Next.js 16 app that imports Canvas LMS class schedules into Google Calendar us
 
 - **Data layer abstraction**: All data access goes through the `IRepository` interface (`src/lib/db/types.ts`). There are two backends: JSON files (`DEV_MODE=json`) and MongoDB (`DEV_MODE=mongo`). Never access data directly — always use `repo` from `src/lib/db/index.ts`.
 - **Auth**: Hand-rolled JWT + bcrypt. The `withAuth()` wrapper in `src/lib/auth/middleware.ts` is used by all protected API routes. Auth state is stored in an httpOnly cookie named `token`.
-- **Browser Use**: We use the REST API directly (`src/lib/browser-use/client.ts`) because the npm SDK (`browser-use-sdk`) ships without dist files. The API base URL is `https://api.browser-use.com/v3`.
+- **Browser Use**: We use the official SDK (`browser-use-sdk@3.4.0`) with the **v3 import** (`browser-use-sdk/v3`). The v3 API uses `POST /sessions` as the unified endpoint. Model tiers are `bu-mini`, `bu-max`, `bu-ultra`. Version 3.4.1 is broken (missing dist files) — pinned to 3.4.0.
 - **Frontend state**: React Context for auth (`src/context/AuthContext.tsx`), custom hooks for data fetching (`src/hooks/`). No external state management library.
 
 ## Key files to understand
@@ -18,8 +18,8 @@ A Next.js 16 app that imports Canvas LMS class schedules into Google Calendar us
 - `src/lib/db/types.ts` — All data model interfaces and the `IRepository` interface. This is the shared contract.
 - `src/lib/db/index.ts` — Exports `repo`, the active repository instance. Import from here, not from json/ or mongo/ directly.
 - `src/lib/auth/middleware.ts` — `withAuth(handler)` pattern for protected API routes.
-- `src/lib/browser-use/client.ts` — `browserUseApi` object with `.profiles`, `.sessions`, `.run()` methods.
-- `src/lib/browser-use/canvas-scraper.ts` — `startCanvasSession()` and `runCanvasScrape()` — the core Canvas import flow.
+- `src/lib/browser-use/client.ts` — `getClient()` returns a `BrowserUse` instance (from `browser-use-sdk/v3`) with `.profiles`, `.sessions`, `.run()` methods.
+- `src/lib/browser-use/canvas-scraper.ts` — `startCanvasSession()`, `runCanvasScrape()`, `resumeCanvasScrape()`, `confirmScrapeResults()`, `deeperScrape()`, `crawlExternalUrl()`, `startCrawlSession()` — the full Canvas import and external crawl lifecycle.
 - `src/lib/browser-use/calendar-pusher.ts` — `startGoogleCalendarSession()` and `exportToGoogleCalendar()` — the Google Calendar export flow.
 - `src/lib/extensions/types.ts` — Interfaces for future features (todos, travel time, reminders, flashcards, lecture AI).
 
@@ -29,7 +29,11 @@ A Next.js 16 app that imports Canvas LMS class schedules into Google Calendar us
 - Client components use `"use client"` directive. Server components are the default.
 - All frontend data fetching goes through `/api/` routes — no direct database access from components.
 - Tailwind CSS for styling. UI primitives are in `src/components/ui/`.
-- Browser Use sessions use profiles to persist cookies. Always call `sessions.stop()` to save profile state.
+- Browser Use sessions use profiles to persist cookies. Call `sessions.stop()` to save profile state — but only after the user confirms results in the `review` stage, not mid-scrape.
+- The Canvas scrape lifecycle is: `connecting → awaiting_login → scraping → review → completed`. The `review` stage keeps the session alive so the user can "search harder", crawl an external URL, or discard.
+- External URL crawl from the dashboard bypasses Canvas entirely: `POST /api/canvas/connect` with `{action: "crawl", externalUrl}` creates a fresh session and crawls directly.
+- The scrape agent must CLICK links on Canvas pages (not navigate to URLs directly) so SSO passthrough works for Piazza/Gradescope/etc.
+- The agent's final output must be raw JSON in the response — not saved to workspace files.
 
 ## Common tasks
 
@@ -52,7 +56,7 @@ A Next.js 16 app that imports Canvas LMS class schedules into Google Calendar us
 
 ## Warnings
 
-- The `browser-use-sdk` npm package is installed but **has no dist files** — do not import from it. Use `browserUseApi` from `src/lib/browser-use/client.ts` instead.
+- The `browser-use-sdk` is pinned to **3.4.0** — version 3.4.1 ships without dist files. Always import from `browser-use-sdk/v3` (not the default export which is the v2 API). Use `getClient()` from `src/lib/browser-use/client.ts`.
 - Next.js 16 deprecates the `middleware.ts` convention in favor of `proxy`. The current middleware still works but will show a warning.
 - The `zod` package exports from `zod/v4` (Zod v4 style). Import as `import { z } from "zod/v4"`.
 - When in JSON dev mode, `data/*.json` files are created automatically on first write. The `data/` directory is gitignored.

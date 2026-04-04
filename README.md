@@ -6,10 +6,12 @@ Built for [DiamondHacks 2026](https://diamondhacks.acmucsd.com/) at UC San Diego
 
 ## How it works
 
-1. **Connect Canvas** — A Browser Use session opens your Canvas LMS in a cloud browser. You log in manually through a live iframe (human-in-the-loop).
-2. **Import Classes** — An AI agent navigates your courses, follows external links (Piazza, Gradescope, etc.), and extracts structured schedule data.
-3. **Toggle & Review** — Your dashboard shows all imported classes with full details. Toggle each class on or off for calendar export.
-4. **Export to Google Calendar** — Another Browser Use session logs into Google Calendar and creates recurring events for your enabled classes.
+1. **Connect Canvas** — A Browser Use session opens your Canvas LMS in a cloud browser. You watch the AI navigate, then log in manually when the login page appears (human-in-the-loop).
+2. **Import Classes** — An AI agent navigates your courses, clicks into external tools (Piazza, Gradescope) via Canvas SSO passthrough, and extracts structured schedule data. If it hits a login wall, it pauses for you to log in and then continues.
+3. **Review & Confirm** — After scraping, you see a summary of what was found, the raw agent output, and can ask the agent to "search harder" before confirming. The browser session stays alive during review.
+4. **Crawl External Sites** — From the dashboard, paste any class website URL (Piazza, instructor page, department site) and the AI crawls it directly for schedule info.
+5. **Toggle & Manage** — Your dashboard shows all imported classes with full details. Toggle each class on or off for calendar export.
+6. **Export to Google Calendar** — Another Browser Use session logs into Google Calendar and creates recurring events for your enabled classes.
 
 ## Quick start
 
@@ -69,7 +71,7 @@ src/
 │   │   ├── json/                 # JSON file backend
 │   │   └── mongo/                # MongoDB/Mongoose backend
 │   ├── auth/                     # Password hashing, JWT, middleware
-│   ├── browser-use/              # Browser Use REST API client + task logic
+│   ├── browser-use/              # Browser Use SDK v3 client + task logic
 │   └── extensions/               # Future feature interfaces
 ├── components/                   # React components (auth, dashboard, canvas, calendar, ui)
 ├── hooks/                        # useAuth, useClasses, useBrowserSession
@@ -103,9 +105,10 @@ src/
 
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
-| POST | `/api/canvas/connect` | Yes | Start Canvas session. Body: `{canvasUrl?}`. Returns `{scrapeSessionId, liveUrl, sessionId}` |
-| GET | `/api/canvas/status?sessionId=` | Yes | Poll scrape session status |
-| POST | `/api/canvas/status` | Yes | Trigger scraping after login. Body: `{scrapeSessionId, canvasUrl?}` |
+| POST | `/api/canvas/connect` | Yes | Start or reuse Canvas session. Body: `{canvasUrl?}` or `{action: "crawl", externalUrl}` for direct crawl. Returns `{scrapeSessionId, liveUrl, sessionId, reused?}` |
+| DELETE | `/api/canvas/connect` | Yes | Discard current Canvas session |
+| GET | `/api/canvas/status?sessionId=` | Yes | Poll session status with live progress (`stepCount`, `lastStepSummary`, `rawOutput`) |
+| POST | `/api/canvas/status` | Yes | Lifecycle actions. Body: `{scrapeSessionId, action, canvasUrl?}`. Actions: (none)=start scrape, `resume`=continue after login, `confirm`=finalize review, `deeper`=search harder, `crawl`=crawl external URL (requires `externalUrl`) |
 | GET | `/api/canvas/profile` | Yes | Get stored Canvas browser profile |
 
 ### Calendar (Browser Use)
@@ -172,7 +175,7 @@ Everyone codes against the shared `IRepository` interface in `src/lib/db/types.t
 
 - **Next.js 16** (App Router, TypeScript, Tailwind CSS)
 - **MongoDB** / Mongoose (production) or **JSON files** (development)
-- **Browser Use** cloud API for browser automation
+- **Browser Use** SDK v3 (`browser-use-sdk@3.4.0`) for AI browser automation
 - **bcrypt** + **JWT** for authentication
 - **Zod** for schema validation
 
