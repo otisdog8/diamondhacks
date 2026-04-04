@@ -22,7 +22,13 @@ function getQuickTasks(availableMinutes: number): string[] {
   return shuffled.slice(0, availableMinutes < 15 ? 2 : 3);
 }
 
-export function RightNowPanel({ events }: { events: ClassEvent[] }) {
+interface RightNowPanelProps {
+  events: ClassEvent[];
+  hasClasses?: boolean;
+  nextDay?: { dayName: string; events: ClassEvent[] } | null;
+}
+
+export function RightNowPanel({ events, hasClasses, nextDay }: RightNowPanelProps) {
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
@@ -63,12 +69,33 @@ export function RightNowPanel({ events }: { events: ClassEvent[] }) {
     );
   }
 
+  // No classes today, but classes exist — show next class day preview
+  if (!nextClass && hasClasses && nextDay) {
+    const first = nextDay.events[0];
+    const startLabel = first.startTime.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    return (
+      <div className="glass rounded-2xl p-5">
+        <p className="text-xs font-semibold text-sky-400 uppercase tracking-widest mb-1">Right now</p>
+        <p className="text-xl font-light text-sky-800">No classes today</p>
+        <p className="text-sm text-sky-400 mt-2">
+          Next up: <span className="font-semibold text-sky-500">{first.code}</span> {nextDay.dayName.toLowerCase() === "tomorrow" ? "tomorrow" : `on ${nextDay.dayName}`} at {startLabel}
+          {first.location ? ` · ${first.location}` : ""}
+        </p>
+        {nextDay.events.length > 1 && (
+          <p className="text-xs text-sky-300 mt-1">
+            + {nextDay.events.length - 1} more class{nextDay.events.length - 1 !== 1 ? "es" : ""} {nextDay.dayName.toLowerCase() === "today" ? "today" : nextDay.dayName.toLowerCase()}
+          </p>
+        )}
+      </div>
+    );
+  }
+
   if (!nextClass || minsUntilNext === null) {
     return (
       <div className="glass rounded-2xl p-5">
         <p className="text-xs font-semibold text-sky-400 uppercase tracking-widest mb-1">Right now</p>
         <p className="text-xl font-light text-sky-800">No classes today</p>
-        <p className="text-sm text-sky-300 mt-1">Import your Canvas schedule to see your day.</p>
+        <p className="text-sm text-sky-300 mt-1">Enjoy your free day.</p>
       </div>
     );
   }

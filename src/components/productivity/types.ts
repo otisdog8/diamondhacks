@@ -47,6 +47,48 @@ export function getTodaysEvents(classes: ClassInfo[]): ClassEvent[] {
   return events.sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
 }
 
+const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+/** Find the next day (including today) that has at least one class. Returns null if no classes. */
+export function getNextClassDay(classes: ClassInfo[]): { dayName: string; events: ClassEvent[] } | null {
+  if (classes.length === 0) return null;
+
+  const today = new Date();
+  const todayDow = today.getDay();
+
+  // Check up to 7 days ahead (starting from today)
+  for (let offset = 0; offset < 7; offset++) {
+    const checkDow = (todayDow + offset) % 7;
+    const checkDate = new Date(today);
+    checkDate.setDate(today.getDate() + offset);
+
+    const events: ClassEvent[] = [];
+    classes.forEach((cls) => {
+      cls.schedule.forEach((slot, i) => {
+        if (slot.dayOfWeek === checkDow) {
+          events.push({
+            id: `${cls.id}-${i}`,
+            code: cls.code,
+            name: cls.name,
+            startTime: parseTimeStr(slot.startTime, checkDate),
+            endTime: parseTimeStr(slot.endTime, checkDate),
+            location: slot.location,
+            type: slot.type,
+          });
+        }
+      });
+    });
+
+    if (events.length > 0) {
+      events.sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
+      const dayName = offset === 0 ? "Today" : offset === 1 ? "Tomorrow" : DAY_NAMES[checkDow];
+      return { dayName, events };
+    }
+  }
+
+  return null;
+}
+
 export function formatMinutes(mins: number): string {
   if (mins < 60) return `${Math.round(mins)}m`;
   const h = Math.floor(mins / 60);

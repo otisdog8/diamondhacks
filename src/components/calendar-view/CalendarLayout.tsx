@@ -7,7 +7,6 @@ import { CalendarMonthView } from "./CalendarMonthView";
 import { CalendarWeekView } from "./CalendarWeekView";
 import { CalendarDayView } from "./CalendarDayView";
 import { TimeSelectionModal } from "./TimeSelectionModal";
-import { generateMockEvents } from "./mockData";
 import { useClasses } from "@/hooks/useClasses";
 import type { CalendarView, EventType, CalendarEvent } from "./types";
 import type { NewCalendarEvent } from "./TimeSelectionModal";
@@ -77,8 +76,7 @@ export function CalendarLayout() {
   const { classes } = useClasses();
 
   const baseEvents = useMemo<CalendarEvent[]>(() => {
-    const real = productivityToCalendarEvents(classes);
-    return real.length > 0 ? real : generateMockEvents();
+    return productivityToCalendarEvents(classes);
   }, [classes]);
 
   const allEvents = useMemo(

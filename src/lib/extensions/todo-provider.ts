@@ -4,7 +4,7 @@
 // ============================================================
 import { v4 as uuidv4 } from "uuid";
 import { repo } from "@/lib/db";
-import { browserUseApi } from "@/lib/browser-use/client";
+import { getClient } from "@/lib/browser-use/client";
 import type { ITodo, ITodoProvider } from "./types";
 
 // In-memory store (JSON dev mode) — swapped for MongoDB in production
@@ -63,14 +63,14 @@ export const todoProvider: ITodoProvider = {
     if (!cls) throw new Error("Class not found");
 
     // Find an existing browser profile for this user
-    const profile = await repo.findBrowserProfileByUserId(userId);
-    if (!profile?.canvasProfileId) {
+    const profile = await repo.findProfileByUserAndService(userId, "canvas");
+    if (!profile) {
       throw new Error("No Canvas session found. Please connect Canvas first.");
     }
 
     // Start a short Browser Use session using the saved Canvas profile
-    const session = await browserUseApi.sessions.create({
-      profileId: profile.canvasProfileId,
+    const session = await getClient().sessions.create({
+      profileId: profile.profileId,
     });
 
     try {
@@ -85,9 +85,9 @@ export const todoProvider: ITodoProvider = {
         Return ONLY the JSON array, no other text.
       `;
 
-      const result = await browserUseApi.run(task, {
+      const result = await getClient().run(task, {
         sessionId: session.id,
-        model: "claude-sonnet-4-6",
+        model: "bu-max",
       });
 
       // Parse the result
@@ -99,7 +99,7 @@ export const todoProvider: ITodoProvider = {
       }> = [];
 
       try {
-        const text = result?.output ?? result?.result ?? "";
+        const text = result?.output ?? "";
         const match = text.match(/\[[\s\S]*\]/);
         if (match) assignments = JSON.parse(match[0]);
       } catch {
@@ -133,7 +133,7 @@ export const todoProvider: ITodoProvider = {
 
       return created;
     } finally {
-      await browserUseApi.sessions.stop(session.id);
+      await getClient().sessions.stop(session.id);
     }
   },
 };

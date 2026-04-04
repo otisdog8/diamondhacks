@@ -5,6 +5,7 @@ export interface UserDoc extends Document {
   passwordHash: string;
   canvasProfileId?: string;
   googleProfileId?: string;
+  googleRefreshToken?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -15,6 +16,7 @@ const UserSchema = new Schema<UserDoc>(
     passwordHash: { type: String, required: true },
     canvasProfileId: { type: String },
     googleProfileId: { type: String },
+    googleRefreshToken: { type: String },
   },
   { timestamps: true }
 );

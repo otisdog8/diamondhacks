@@ -18,6 +18,7 @@ function docToUser(doc: Record<string, unknown>): IUser {
     passwordHash: d.passwordHash as string,
     canvasProfileId: d.canvasProfileId as string | undefined,
     googleProfileId: d.googleProfileId as string | undefined,
+    googleRefreshToken: d.googleRefreshToken as string | undefined,
     createdAt: d.createdAt as Date,
     updatedAt: d.updatedAt as Date,
   };

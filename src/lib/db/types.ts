@@ -6,6 +6,7 @@ export interface IUser {
   passwordHash: string;
   canvasProfileId?: string;
   googleProfileId?: string;
+  googleRefreshToken?: string; // Google OAuth2 refresh token for Calendar API
   createdAt: Date;
   updatedAt: Date;
 }

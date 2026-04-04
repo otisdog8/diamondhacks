@@ -2,79 +2,68 @@
 
 import { useState } from "react";
 import { useClasses } from "@/hooks/useClasses";
-import { getTodaysEvents } from "./types";
+import { getTodaysEvents, getNextClassDay } from "./types";
 import { RightNowPanel } from "./RightNowPanel";
 import { LeaveReminder } from "./LeaveReminder";
 import { DailyTimeline } from "./DailyTimeline";
 import { TinyTasks } from "./TinyTasks";
 import { FocusTimer } from "./FocusTimer";
-
-// Mock events for demo / when no real data exists
-function makeMockEvents() {
-  const today = new Date();
-  const at = (h: number, m: number) => {
-    const d = new Date(today);
-    d.setHours(h, m, 0, 0);
-    return d;
-  };
-  return [
-    {
-      id: "demo-1",
-      code: "CSE 101",
-      name: "Introduction to Programming",
-      startTime: at(9, 0),
-      endTime: at(10, 15),
-      location: "PCYNH 106",
-      type: "Lecture",
-    },
-    {
-      id: "demo-2",
-      code: "MATH 20C",
-      name: "Calculus & Analytic Geometry",
-      startTime: at(11, 0),
-      endTime: at(11, 50),
-      location: "CENTR 115",
-      type: "Lecture",
-    },
-    {
-      id: "demo-3",
-      code: "CSE 110",
-      name: "Software Engineering",
-      startTime: at(14, 0),
-      endTime: at(15, 15),
-      location: "EBU3B 2154",
-      type: "Discussion",
-    },
-  ];
-}
+import Link from "next/link";
+import { Button } from "@/components/ui/Button";
 
 export function SmartDayView() {
   const { classes, loading } = useClasses();
   const [travelMins, setTravelMins] = useState(10);
 
-  const realEvents = getTodaysEvents(classes);
-  const events = realEvents.length > 0 ? realEvents : makeMockEvents();
-  const usingMock = realEvents.length === 0 && !loading;
+  const todayEvents = getTodaysEvents(classes);
+  const hasClasses = classes.length > 0;
 
   const now = new Date();
-  const nextClass = events.find((e) => e.startTime > now);
+  const nextClass = todayEvents.find((e) => e.startTime > now);
   const showLeaveReminder =
     nextClass != null &&
     nextClass.startTime.getTime() - now.getTime() < 90 * 60_000;
 
+  // If there are no classes today but classes exist, show the next class day
+  const nextDay = todayEvents.length === 0 && hasClasses ? getNextClassDay(classes) : null;
+
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        {[1, 2].map((i) => (
+          <div key={i} className="h-24 rounded-2xl bg-sky-50/50 animate-pulse" />
+        ))}
+      </div>
+    );
+  }
+
+  if (!hasClasses) {
+    return (
+      <div className="space-y-4">
+        <div className="glass rounded-2xl p-6 text-center space-y-3">
+          <p className="text-xl font-light text-sky-800">No classes yet</p>
+          <p className="text-sm text-sky-400">
+            Import your Canvas schedule to see your day here.
+          </p>
+          <Link href="/canvas">
+            <Button>Import from Canvas</Button>
+          </Link>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2" />
+          <div className="flex flex-col gap-4">
+            <TinyTasks />
+            <FocusTimer />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
-      {/* Demo banner */}
-      {usingMock && (
-        <div className="bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 flex items-center gap-2">
-          <span className="text-xs text-slate-400">
-            Showing sample schedule. Import your Canvas classes to see your real day.
-          </span>
-        </div>
-      )}
-
       {/* Top: Right Now */}
-      <RightNowPanel events={events} />
+      <RightNowPanel events={todayEvents} hasClasses={hasClasses} nextDay={nextDay} />
 
       {/* Leave reminder — only when approaching next class */}
       {showLeaveReminder && nextClass && (
@@ -89,7 +78,10 @@ export function SmartDayView() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Timeline — takes up 2/3 */}
         <div className="lg:col-span-2">
-          <DailyTimeline events={events} />
+          <DailyTimeline
+            events={todayEvents}
+            nextDay={nextDay}
+          />
         </div>
 
         {/* Sidebar — tasks + timer */}

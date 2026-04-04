@@ -71,9 +71,10 @@ function formatTime(date: Date): string {
 
 interface DailyTimelineProps {
   events: ClassEvent[];
+  nextDay?: { dayName: string; events: ClassEvent[] } | null;
 }
 
-export function DailyTimeline({ events }: DailyTimelineProps) {
+export function DailyTimeline({ events, nextDay }: DailyTimelineProps) {
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
@@ -81,7 +82,42 @@ export function DailyTimeline({ events }: DailyTimelineProps) {
     return () => clearInterval(id);
   }, []);
 
+  // No classes today — show next class day preview if available
   if (events.length === 0) {
+    if (nextDay) {
+      return (
+        <div className="bg-white rounded-2xl border border-sky-100/60 shadow-sm p-5">
+          <p className="text-xs font-semibold text-sky-400 uppercase tracking-widest mb-3">
+            Coming up · {nextDay.dayName}
+          </p>
+          <div className="space-y-2">
+            {nextDay.events.map((event) => (
+              <div
+                key={event.id}
+                className="flex items-center gap-3 rounded-xl bg-slate-50 border border-sky-100/60 px-3 py-2.5"
+              >
+                <div className="min-w-0 flex-1">
+                  <span className="text-sm font-semibold text-sky-700">{event.code}</span>
+                  <p className="text-xs text-sky-400 truncate mt-0.5">{event.name}</p>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="text-xs text-sky-400">
+                    {event.startTime.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
+                  </p>
+                  <p className="text-xs text-sky-300">
+                    {event.endTime.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
+                  </p>
+                </div>
+                {event.location && (
+                  <p className="text-xs text-sky-300">{event.location}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="bg-white rounded-2xl border border-sky-100/60 shadow-sm p-5">
         <p className="text-xs font-semibold text-sky-400 uppercase tracking-widest mb-3">

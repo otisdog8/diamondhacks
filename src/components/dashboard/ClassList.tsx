@@ -119,7 +119,7 @@ export function ClassList() {
         {[1, 2, 3].map((i) => (
           <div
             key={i}
-            className="h-32 rounded-xl bg-gray-100 dark:bg-gray-800 animate-pulse"
+            className="h-32 rounded-xl bg-sky-50/50 animate-pulse"
           />
         ))}
       </div>
@@ -128,17 +128,17 @@ export function ClassList() {
 
   if (error) {
     return (
-      <div className="rounded-xl bg-red-50 dark:bg-red-900/20 p-6 text-center">
-        <p className="text-red-600 dark:text-red-400">{error}</p>
+      <div className="rounded-xl bg-red-50 p-6 text-center">
+        <p className="text-red-600">{error}</p>
       </div>
     );
   }
 
   if (classes.length === 0) {
     return (
-      <div className="rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 p-12 text-center">
-        <p className="text-gray-500 dark:text-gray-400 text-lg">No classes found</p>
-        <p className="text-gray-400 dark:text-gray-500 mt-1">
+      <div className="rounded-xl border-2 border-dashed border-sky-200 p-12 text-center">
+        <p className="text-sky-500 text-lg">No classes found</p>
+        <p className="text-sky-400 mt-1">
           Connect your Canvas account to import your class schedule
         </p>
         <Link href="/canvas">
@@ -155,11 +155,11 @@ export function ClassList() {
     <div className="space-y-4">
       {/* Stats + conflict warning */}
       <div className="flex flex-wrap items-center gap-4">
-        <p className="text-sm text-gray-500 dark:text-gray-400">
+        <p className="text-sm text-sky-500">
           {enabledCount} of {classes.length} classes enabled for calendar export
         </p>
         {conflictCount > 0 && (
-          <span className="inline-flex items-center gap-1 text-xs font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30 px-2 py-1 rounded-full">
+          <span className="inline-flex items-center gap-1 text-xs font-medium text-red-600 bg-red-50 px-2 py-1 rounded-full">
             ⚠ {conflictCount} class{conflictCount !== 1 ? "es" : ""} with time conflicts
           </span>
         )}
@@ -169,7 +169,7 @@ export function ClassList() {
       <div className="flex flex-wrap items-center gap-3">
         {/* Search */}
         <div className="relative flex-1 min-w-[200px]">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sky-300 text-sm pointer-events-none">
             ⌕
           </span>
           <input
@@ -177,12 +177,12 @@ export function ClassList() {
             placeholder="Search classes..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-8 pr-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full pl-8 pr-3 py-2 text-sm rounded-lg border border-sky-200 bg-white text-sky-900 placeholder-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-400"
           />
         </div>
 
         {/* Filter tabs */}
-        <div className="flex rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden text-sm">
+        <div className="flex rounded-lg border border-sky-200 overflow-hidden text-sm">
           {(["all", "enabled", "disabled"] as FilterTab[]).map((tab) => (
             <button
               key={tab}
@@ -190,8 +190,8 @@ export function ClassList() {
               className={`px-3 py-1.5 font-medium capitalize transition-colors
                 ${
                   filter === tab
-                    ? "bg-blue-600 text-white"
-                    : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700"
+                    ? "bg-sky-500 text-white"
+                    : "bg-white text-sky-500 hover:bg-sky-50"
                 }`}
             >
               {tab}
@@ -200,14 +200,14 @@ export function ClassList() {
         </div>
 
         {/* View toggle */}
-        <div className="flex rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden text-sm">
+        <div className="flex rounded-lg border border-sky-200 overflow-hidden text-sm">
           <button
             onClick={() => setView("list")}
             className={`px-3 py-1.5 font-medium transition-colors
               ${
                 view === "list"
-                  ? "bg-blue-600 text-white"
-                  : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700"
+                  ? "bg-sky-500 text-white"
+                  : "bg-white text-sky-500 hover:bg-sky-50"
               }`}
           >
             List
@@ -217,8 +217,8 @@ export function ClassList() {
             className={`px-3 py-1.5 font-medium transition-colors
               ${
                 view === "week"
-                  ? "bg-blue-600 text-white"
-                  : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700"
+                  ? "bg-sky-500 text-white"
+                  : "bg-white text-sky-500 hover:bg-sky-50"
               }`}
           >
             Week
@@ -250,8 +250,8 @@ export function ClassList() {
       {view === "week" ? (
         <WeekView classes={filtered} />
       ) : filtered.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-gray-300 dark:border-gray-600 p-8 text-center">
-          <p className="text-gray-400 dark:text-gray-500 text-sm">
+        <div className="rounded-xl border border-dashed border-sky-200 p-8 text-center">
+          <p className="text-sky-400 text-sm">
             No classes match your search
           </p>
         </div>
