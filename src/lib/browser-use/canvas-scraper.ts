@@ -702,28 +702,34 @@ async function saveCourses(courses: ScrapedCourse[], userId: string) {
       const assignments = Array.isArray(course.assignments) ? course.assignments : [];
       for (const a of assignments) {
         if (!a || typeof a !== "object") continue;
-        if (!a.dueDate || !a.title) continue;
+        const aTitle = str(a.title);
+        if (!aTitle) continue; // title is required, but dueDate is optional
+
         try {
           const existingAssignments = await assignmentProvider.getAssignmentsForClass(userId, classId);
+          const aId = str(a.id);
           const dup = existingAssignments.find(
-            (ex) => ex.canvasAssignmentId === str(a.id) || ex.title === str(a.title)
+            (ex) =>
+              // Only match on canvasAssignmentId if both sides are non-empty
+              (aId && ex.canvasAssignmentId && ex.canvasAssignmentId === aId) ||
+              ex.title === aTitle
           );
           if (dup) continue;
 
           await assignmentProvider.createAssignment({
             userId,
             classId,
-            title: str(a.title),
+            title: aTitle,
             description: str(a.description) || undefined,
-            dueDate: str(a.dueDate),
+            dueDate: str(a.dueDate) || undefined,
             points: typeof a.points === "number" ? a.points : undefined,
             type: (str(a.type) as "homework" | "project" | "exam" | "quiz" | "lab" | "other") || "homework",
             source: "canvas",
-            canvasAssignmentId: str(a.id),
+            canvasAssignmentId: aId || undefined,
             completed: false,
           });
         } catch (err) {
-          console.error(`[canvas-scraper] Failed to save assignment "${a.title}":`, err);
+          console.error(`[canvas-scraper] Failed to save assignment "${aTitle}":`, err);
         }
       }
     } catch (err) {

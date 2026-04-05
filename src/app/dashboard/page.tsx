@@ -6,6 +6,7 @@ import { ClassList } from "@/components/dashboard/ClassList";
 import { CrawlExternalUrl } from "@/components/dashboard/CrawlExternalUrl";
 import { SmartDayView } from "@/components/productivity/SmartDayView";
 import { ScheduleChat } from "@/components/dashboard/ScheduleChat";
+import { CalendarExport } from "@/components/calendar/CalendarExport";
 import { useClasses } from "@/hooks/useClasses";
 import { useTravelPreferences } from "@/hooks/useTravelPreferences";
 import { ALL_RESIDENCES, locationLabel } from "@/lib/travel/walking-times";
@@ -40,6 +41,7 @@ export default function DashboardPage() {
   const { classes, fetchClasses } = useClasses();
   const { prefs, setHomeBase } = useTravelPreferences();
   const [dismissed, setDismissed] = useState(false);
+  const [showExportPanel, setShowExportPanel] = useState(false);
 
   const showTravelBanner = !prefs.homeBase && classes.length > 0 && !dismissed;
 
@@ -91,11 +93,12 @@ export default function DashboardPage() {
               Import from Canvas
             </button>
           </Link>
-          <Link href="/calendar">
-            <button className="inline-flex items-center justify-center rounded-xl bg-white hover:bg-gray-50 text-gray-600 border border-gray-200 px-4 py-2 text-sm font-medium transition-all">
-              Export to Google
-            </button>
-          </Link>
+          <button
+            onClick={() => setShowExportPanel(true)}
+            className="inline-flex items-center justify-center rounded-xl bg-white hover:bg-gray-50 text-gray-600 border border-gray-200 px-4 py-2 text-sm font-medium transition-all"
+          >
+            Export to Google
+          </button>
         </div>
       </div>
 
@@ -133,6 +136,33 @@ export default function DashboardPage() {
         </div>
       )}
 
+      {/* ── Export slide-over panel ───────────────────────────────────────── */}
+      {showExportPanel && (
+        <div className="fixed inset-0 z-50 flex justify-end">
+          <div
+            className="absolute inset-0 bg-black/20 backdrop-blur-sm"
+            onClick={() => setShowExportPanel(false)}
+          />
+          <div className="relative w-full max-w-lg bg-white dark:bg-gray-900 shadow-2xl overflow-y-auto">
+            <div className="sticky top-0 flex items-center justify-between border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-6 py-4 z-10">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Google Calendar Export
+              </h2>
+              <button
+                onClick={() => setShowExportPanel(false)}
+                className="rounded-lg p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="p-6">
+              <CalendarExport />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

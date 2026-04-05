@@ -5,7 +5,7 @@ import { useState, useRef, useEffect } from "react";
 interface ChatMessage {
   role: "user" | "assistant";
   text: string;
-  patch?: { classId: string; changes: Record<string, unknown> } | null;
+  action?: Record<string, unknown> | null;
   applied?: boolean;
 }
 
@@ -48,7 +48,7 @@ export function ScheduleChat({ onClassUpdated }: ScheduleChatProps) {
         {
           role: "assistant",
           text: data.reply || data.error || "Something went wrong.",
-          patch: data.patch,
+          action: data.action,
         },
       ]);
     } catch {
@@ -62,16 +62,16 @@ export function ScheduleChat({ onClassUpdated }: ScheduleChatProps) {
     }
   };
 
-  const applyPatch = async (msgIdx: number) => {
+  const applyAction = async (msgIdx: number) => {
     const msg = messages[msgIdx];
-    if (!msg.patch) return;
+    if (!msg.action) return;
 
     setApplying(`${msgIdx}`);
     try {
       const res = await fetch("/api/classes/chat", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(msg.patch),
+        body: JSON.stringify({ action: msg.action }),
       });
 
       if (res.ok) {
@@ -106,7 +106,7 @@ export function ScheduleChat({ onClassUpdated }: ScheduleChatProps) {
           Schedule Editor
         </p>
         <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
-          Try: &quot;Cancel CSE 125 OH on Monday&quot; or &quot;Move CSE 127 lecture to CENTR 101&quot;
+          Try: &quot;Cancel Monday OH&quot;, &quot;Move lecture to CENTR 101&quot;, &quot;Mark essay as done&quot;, &quot;Add a todo for Friday&quot;
         </p>
       </div>
 
@@ -128,11 +128,11 @@ export function ScheduleChat({ onClassUpdated }: ScheduleChatProps) {
             >
               <p className="whitespace-pre-wrap">{msg.text}</p>
 
-              {/* Confirm/reject buttons for patches */}
-              {msg.role === "assistant" && msg.patch && !msg.applied && (
+              {/* Confirm/reject buttons for actions */}
+              {msg.role === "assistant" && msg.action && !msg.applied && (
                 <div className="flex gap-2 mt-2 pt-2 border-t border-gray-200/50 dark:border-gray-700/50">
                   <button
-                    onClick={() => applyPatch(i)}
+                    onClick={() => applyAction(i)}
                     disabled={applying === `${i}`}
                     className="text-xs font-semibold text-green-600 hover:text-green-700 disabled:opacity-50"
                   >
@@ -142,7 +142,7 @@ export function ScheduleChat({ onClassUpdated }: ScheduleChatProps) {
                     onClick={() =>
                       setMessages((prev) =>
                         prev.map((m, idx) =>
-                          idx === i ? { ...m, patch: null } : m
+                          idx === i ? { ...m, action: null } : m
                         )
                       )
                     }

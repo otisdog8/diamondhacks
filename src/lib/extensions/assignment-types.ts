@@ -18,7 +18,7 @@ export interface IAssignment {
   classId: string;
   title: string;
   description?: string;
-  dueDate: string;        // ISO date string
+  dueDate?: string;       // ISO date string (optional — some assignments have no due date)
   points?: number;
   type: "homework" | "project" | "exam" | "quiz" | "lab" | "other";
   source: "canvas" | "manual";

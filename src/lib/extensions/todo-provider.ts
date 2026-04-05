@@ -118,11 +118,12 @@ export const todoProvider: ITodoProvider = {
       const allExisting = loadAll();
       const created: ITodo[] = [];
       for (const assignment of assignments) {
+        const aId = assignment.id || "";
         const exists = allExisting.find(
           (t) =>
             t.userId === userId &&
             t.classId === classId &&
-            t.canvasAssignmentId === assignment.id
+            ((aId && t.canvasAssignmentId && t.canvasAssignmentId === aId) || t.title === assignment.title)
         );
         if (exists) continue;
 
@@ -134,7 +135,7 @@ export const todoProvider: ITodoProvider = {
           dueDate: assignment.dueDate ?? undefined,
           completed: false,
           source: "canvas",
-          canvasAssignmentId: assignment.id,
+          canvasAssignmentId: aId || undefined,
         });
         created.push(todo);
       }

@@ -23,11 +23,13 @@ const TYPE_COLORS: Record<string, { bg: string; text: string }> = {
 };
 const FALLBACK_COLOR = { bg: "#f0f1f9", text: "#6A6A80" };
 
-function daysUntil(dateStr: string): number {
+function daysUntil(dateStr: string | undefined): number | null {
+  if (!dateStr) return null;
   return Math.ceil((new Date(dateStr).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
 }
 
-function urgencyColor(days: number): string {
+function urgencyColor(days: number | null): string {
+  if (days === null) return "#6A6A80";
   if (days < 0) return "#6A6A80";
   if (days <= 2) return "#FF5C5C";
   if (days <= 5) return "#FFB020";
@@ -235,7 +237,7 @@ function AssignmentRow({
               fontSize: 10, fontWeight: 700,
               color: assignment.completed ? "var(--muted)" : urgencyColor(days),
             }}>
-              {assignment.completed ? "Done" : days < 0 ? "Overdue" : days === 0 ? "Today!" : `${days}d`}
+              {assignment.completed ? "Done" : days === null ? "No date" : days < 0 ? "Overdue" : days === 0 ? "Today!" : `${days}d`}
             </span>
             <span style={{
               fontSize: 9, fontWeight: 700,
@@ -397,11 +399,15 @@ function AssignmentDetail({
               )}
             </div>
             <p style={{ fontSize: 12, color: "var(--muted)", marginTop: 3 }}>
-              Due {new Date(assignment.dueDate).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
-              {" · "}
-              <span style={{ color: urgencyColor(days), fontWeight: 600 }}>
-                {days < 0 ? "Overdue" : days === 0 ? "Due today!" : `${days} days left`}
-              </span>
+              {assignment.dueDate
+                ? <>Due {new Date(assignment.dueDate).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}</>
+                : "No due date"}
+              {days !== null && <>
+                {" · "}
+                <span style={{ color: urgencyColor(days), fontWeight: 600 }}>
+                  {days < 0 ? "Overdue" : days === 0 ? "Due today!" : `${days} days left`}
+                </span>
+              </>}
               {assignment.points && ` · ${assignment.points} pts`}
             </p>
             {assignment.description && (
@@ -524,7 +530,9 @@ function AssignmentDetail({
                   {assignment.title}
                 </p>
                 <p style={{ fontSize: 11, color: "var(--muted)", marginTop: 1 }}>
-                  {new Date(assignment.dueDate).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+                  {assignment.dueDate
+                    ? new Date(assignment.dueDate).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })
+                    : "No due date"}
                 </p>
               </div>
             </div>
@@ -620,6 +628,7 @@ function MilestoneRow({
                   flexShrink: 0,
                 }}>
                   {milestone.completed ? "Done" :
+                    days === null ? "" :
                     days < 0 ? "Overdue" :
                     days === 0 ? "Today" :
                     `${days}d`}
