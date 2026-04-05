@@ -4,7 +4,7 @@ export const CourseScheduleSchema = z.object({
   dayOfWeek: z.string().describe("Day of week, e.g. 'Monday', 'Tuesday'"),
   startTime: z.string().describe("Start time in 24h format, e.g. '14:00'"),
   endTime: z.string().describe("End time in 24h format, e.g. '15:20'"),
-  location: z.string().optional().describe("Room/building, e.g. 'WLH 2001'"),
+  location: z.string().optional().describe("Building abbreviation + room number, e.g. 'WLH 2001', 'PETER 108', 'CSE 4258', 'CENTR 101', 'FAH 1301'. Use the short campus building code, NOT the full address."),
   host: z.string().optional().describe("For office hours: who is hosting, e.g. 'TA John Smith', 'Prof. Rossano'. Omit for lectures/discussions/labs."),
   type: z.string().describe("Type: lecture, discussion, lab, office_hours, final, midterm, or other"),
 });

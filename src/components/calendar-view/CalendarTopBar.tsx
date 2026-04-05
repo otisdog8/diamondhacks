@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import type { CalendarView } from "./types";
 
 const MONTH_NAMES = [
@@ -38,38 +37,31 @@ interface CalendarTopBarProps {
 export function CalendarTopBar({ currentDate, view, onViewChange, onNavigate, onToday, onAddEvent }: CalendarTopBarProps) {
   const label = getViewLabel(view, currentDate);
   return (
-    <header className="flex items-center h-14 px-4 border-b border-sky-100/60 glass-strong shrink-0 gap-3">
-      <Link href="/dashboard" className="text-sky-400 hover:text-sky-600 transition text-sm mr-1 shrink-0" title="Back">
-        ←
-      </Link>
-      <span className="text-sm font-semibold text-sky-700 shrink-0">
-        Canvas<span className="text-sky-400">Cal</span>
-      </span>
-
+    <header className="flex items-center h-11 px-4 border-b border-gray-200/80 bg-white/90 backdrop-blur-sm shrink-0 gap-3">
       <button
         onClick={onAddEvent}
-        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-sky-400 text-white hover:bg-sky-500 transition shadow-sm shadow-sky-200/50 shrink-0 mr-2"
+        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-[#163847] text-white hover:bg-[#1e4d5f] transition shrink-0 mr-1"
       >
         <span className="text-base leading-none">+</span> New
       </button>
 
       <div className="flex items-center gap-1">
-        <button onClick={onToday} className="px-3 py-1.5 text-xs font-medium text-sky-600 rounded-xl border border-sky-100 bg-white/60 hover:bg-white/90 transition">
+        <button onClick={onToday} className="px-3 py-1.5 text-xs font-medium text-gray-600 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 transition">
           Today
         </button>
-        <button onClick={() => onNavigate(-1)} className="w-7 h-7 flex items-center justify-center rounded-xl text-sky-400 hover:bg-sky-50 transition text-sm">‹</button>
-        <button onClick={() => onNavigate(1)}  className="w-7 h-7 flex items-center justify-center rounded-xl text-sky-400 hover:bg-sky-50 transition text-sm">›</button>
+        <button onClick={() => onNavigate(-1)} className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 transition text-sm">‹</button>
+        <button onClick={() => onNavigate(1)}  className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 transition text-sm">›</button>
       </div>
 
-      <h1 className="text-sm font-semibold text-sky-800 flex-1 min-w-0 truncate">{label}</h1>
+      <h1 className="text-sm font-semibold text-gray-900 flex-1 min-w-0 truncate">{label}</h1>
 
-      <div className="flex rounded-xl border border-sky-100 overflow-hidden shrink-0 text-xs bg-white/60">
+      <div className="flex rounded-lg border border-gray-200 overflow-hidden shrink-0 text-xs">
         {(["day", "week", "month"] as CalendarView[]).map((v) => (
           <button
             key={v}
             onClick={() => onViewChange(v)}
             className={`px-3 py-1.5 font-medium capitalize transition
-              ${view === v ? "bg-sky-400 text-white" : "text-sky-500 hover:bg-sky-50"}`}
+              ${view === v ? "bg-gray-100 text-gray-900" : "text-gray-500 hover:bg-gray-50"}`}
           >
             {v}
           </button>

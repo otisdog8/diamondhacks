@@ -1,6 +1,6 @@
 import { google } from "googleapis";
 import type { IClassInfo } from "@/lib/db/types";
-import { getQuarterDates, inferQuarterWeeks, getFirstDayInQuarter } from "@/lib/quarter-dates";
+import { getQuarterDates, inferQuarterWeeks, getFirstDayInQuarter, getFinalExamDate } from "@/lib/quarter-dates";
 import { parseLocationToBuilding, getWalkingMinutes, locationLabel } from "@/lib/travel/walking-times";
 
 const DAY_MAP: Record<number, string> = {
@@ -181,6 +181,38 @@ export async function exportClassesToCalendar(
     const weeks = inferQuarterWeeks(cls.term);
 
     for (const slot of cls.schedule) {
+      const slotType = slot.type?.toLowerCase() ?? "";
+
+      // Finals/midterms: single non-recurring event on the exam date
+      if (slotType === "final" || slotType === "midterm") {
+        const examDate = getFinalExamDate(cls.term, slot.dayOfWeek);
+        if (!examDate) continue;
+        const label = slotType === "final" ? "FINAL" : "MIDTERM";
+        try {
+          await calendar.events.insert({
+            calendarId,
+            requestBody: {
+              summary: `${label}: ${cls.code}`,
+              description: [
+                `${cls.name} — ${label.charAt(0) + label.slice(1).toLowerCase()} Exam`,
+                cls.instructor ? `Instructor: ${cls.instructor}` : "",
+                slot.location ? `Location: ${slot.location}` : "",
+              ].filter(Boolean).join("\n"),
+              location: slot.location || undefined,
+              colorId: "11", // red
+              start: { dateTime: `${examDate}T${slot.startTime}:00`, timeZone },
+              end: { dateTime: `${examDate}T${slot.endTime}:00`, timeZone },
+              // No recurrence — single event
+            },
+          });
+          eventsCreated++;
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : "Unknown error";
+          errors.push(`${cls.code} ${label}: ${msg}`);
+        }
+        continue;
+      }
+
       const rruleDay = DAY_MAP[slot.dayOfWeek];
       if (!rruleDay) continue;
 

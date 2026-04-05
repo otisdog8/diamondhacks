@@ -35,10 +35,10 @@ export function CalendarExport() {
   const [selectedCalendarId, setSelectedCalendarId] = useState("primary");
   const [loadingCalendars, setLoadingCalendars] = useState(false);
 
-  // Travel export options
+  // Travel export options — always uses the current travel prefs
   const { prefs: travelPrefs, setHomeBase: setTravelHomeBase } = useTravelPreferences();
   const [includeTravelEvents, setIncludeTravelEvents] = useState(true);
-  const [exportHomeBase, setExportHomeBase] = useState<string | null>(travelPrefs.homeBase);
+  const exportHomeBase = travelPrefs.homeBase;
 
   // Fetch available calendars once connected
   const fetchCalendars = useCallback(async () => {
@@ -301,11 +301,7 @@ export function CalendarExport() {
                     </label>
                     <select
                       value={exportHomeBase ?? ""}
-                      onChange={(e) => {
-                        const v = e.target.value || null;
-                        setExportHomeBase(v);
-                        setTravelHomeBase(v); // also persist to travel prefs
-                      }}
+                      onChange={(e) => setTravelHomeBase(e.target.value || null)}
                       className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-2 py-1.5 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="">Select your residence...</option>
@@ -314,7 +310,7 @@ export function CalendarExport() {
                       ))}
                     </select>
                     {!exportHomeBase && (
-                      <p className="text-xs text-amber-600">Select a residence to enable travel events.</p>
+                      <p className="text-xs text-amber-600">Select a residence to enable travel events, or set it in Settings.</p>
                     )}
                   </div>
                 )}

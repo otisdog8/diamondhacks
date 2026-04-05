@@ -8,10 +8,11 @@ import { Button } from "@/components/ui/Button";
 
 const NAV_ITEMS = [
   { label: "Today",    href: "/dashboard" },
-  { label: "Schedule", href: "/schedule"  },
+  { label: "Schedule", href: "/dashboard/schedule" },
   { label: "Canvas",   href: "/canvas"    },
   { label: "Calendar", href: "/calendar"  },
   { label: "Focus",    href: "/focus"     },
+  { label: "Settings", href: "/dashboard/settings" },
 ];
 
 export default function DashboardLayout({
@@ -100,7 +101,11 @@ export default function DashboardLayout({
       </header>
 
       {/* ── Page content ── */}
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 lg:px-8">
+      <main className={`w-full flex-1 ${
+        pathname.startsWith("/dashboard/schedule")
+          ? "px-0 py-0"
+          : "mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8"
+      }`}>
         {children}
       </main>
 

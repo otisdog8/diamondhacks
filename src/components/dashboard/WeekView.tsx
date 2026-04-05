@@ -40,6 +40,7 @@ function formatHour(hour: number): string {
 interface Session {
   cls: ClassInfo;
   location?: string;
+  slotType: string;
   startMin: number;
   endMin: number;
   colorIdx: number;
@@ -59,6 +60,7 @@ function getSessionsForDay(
         sessions.push({
           cls,
           location: slot.location,
+          slotType: t,
           startMin: parseTimeToMinutes(slot.startTime),
           endMin: parseTimeToMinutes(slot.endTime),
           colorIdx: colorMap.get(cls.id) ?? 0,
@@ -67,12 +69,13 @@ function getSessionsForDay(
     });
   });
 
-  // Detect conflicts
+  // Detect conflicts (office hours don't count as conflicts)
   return sessions.map((s, i) => ({
     ...s,
-    conflict: sessions.some(
+    conflict: s.slotType !== "office_hours" && sessions.some(
       (other, j) =>
-        i !== j && s.startMin < other.endMin && other.startMin < s.endMin
+        i !== j && other.slotType !== "office_hours" &&
+        s.startMin < other.endMin && other.startMin < s.endMin
     ),
   }));
 }

@@ -2,9 +2,23 @@
 
 import { useState, useCallback, useEffect } from "react";
 
+export interface LocationOverride {
+  id: string;
+  minGapMinutes: number;
+  location: string;  // canonical building name
+  label: string;     // user-friendly label
+}
+
 export interface TravelPreferences {
   homeBase: string | null;
   travelEventsEnabled: boolean;
+  travelForLectures: boolean;
+  travelForDiscussions: boolean;
+  travelForLabs: boolean;
+  travelForOfficeHours: boolean;
+  locationOverrides: LocationOverride[];
+  /** Event IDs the user has chosen to skip (not attend / no travel needed) */
+  skippedEventIds: string[];
 }
 
 const STORAGE_KEY = "canvascal_travel_prefs";
@@ -12,6 +26,12 @@ const STORAGE_KEY = "canvascal_travel_prefs";
 const DEFAULT_PREFS: TravelPreferences = {
   homeBase: null,
   travelEventsEnabled: true,
+  travelForLectures: true,
+  travelForDiscussions: true,
+  travelForLabs: true,
+  travelForOfficeHours: false,
+  locationOverrides: [],
+  skippedEventIds: [],
 };
 
 function loadPrefs(): TravelPreferences {
@@ -33,26 +53,75 @@ function savePrefs(prefs: TravelPreferences) {
 export function useTravelPreferences() {
   const [prefs, setPrefs] = useState<TravelPreferences>(DEFAULT_PREFS);
 
-  // Load from localStorage on mount (client only)
   useEffect(() => {
     setPrefs(loadPrefs());
   }, []);
 
-  const setHomeBase = useCallback((homeBase: string | null) => {
+  const update = useCallback((patch: Partial<TravelPreferences>) => {
     setPrefs((prev) => {
-      const next = { ...prev, homeBase };
+      const next = { ...prev, ...patch };
       savePrefs(next);
       return next;
     });
   }, []);
 
-  const setTravelEnabled = useCallback((travelEventsEnabled: boolean) => {
+  const setHomeBase = useCallback((homeBase: string | null) => update({ homeBase }), [update]);
+  const setTravelEnabled = useCallback((travelEventsEnabled: boolean) => update({ travelEventsEnabled }), [update]);
+
+  const setTravelForType = useCallback((type: string, enabled: boolean) => {
+    const map: Record<string, keyof TravelPreferences> = {
+      lectures: "travelForLectures",
+      discussions: "travelForDiscussions",
+      labs: "travelForLabs",
+      officeHours: "travelForOfficeHours",
+    };
+    const key = map[type];
+    if (key) update({ [key]: enabled } as Partial<TravelPreferences>);
+  }, [update]);
+
+  const addLocationOverride = useCallback((override: Omit<LocationOverride, "id">) => {
     setPrefs((prev) => {
-      const next = { ...prev, travelEventsEnabled };
+      const next = {
+        ...prev,
+        locationOverrides: [...prev.locationOverrides, { ...override, id: `lo-${Date.now()}` }],
+      };
       savePrefs(next);
       return next;
     });
   }, []);
 
-  return { prefs, setHomeBase, setTravelEnabled };
+  const removeLocationOverride = useCallback((id: string) => {
+    setPrefs((prev) => {
+      const next = {
+        ...prev,
+        locationOverrides: prev.locationOverrides.filter((o) => o.id !== id),
+      };
+      savePrefs(next);
+      return next;
+    });
+  }, []);
+
+  const toggleSkippedEvent = useCallback((eventId: string) => {
+    setPrefs((prev) => {
+      const has = prev.skippedEventIds.includes(eventId);
+      const next = {
+        ...prev,
+        skippedEventIds: has
+          ? prev.skippedEventIds.filter((id) => id !== eventId)
+          : [...prev.skippedEventIds, eventId],
+      };
+      savePrefs(next);
+      return next;
+    });
+  }, []);
+
+  return {
+    prefs,
+    setHomeBase,
+    setTravelEnabled,
+    setTravelForType,
+    addLocationOverride,
+    removeLocationOverride,
+    toggleSkippedEvent,
+  };
 }

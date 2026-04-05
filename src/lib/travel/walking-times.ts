@@ -107,6 +107,29 @@ const ALIAS_MAP: Record<string, string> = {
   // Extra schedule aliases
   "DIB": "CSB",  // Design & Innovation Building, near CSB
   "COA": "Mosaic", // Center of Arts, part of NTPLL/Mosaic complex
+  // Full building name fragments (from Google Calendar / full addresses)
+  "COMPUTER SCIENCE": "CSE",
+  "CENTER HALL": "Center",
+  "CENTR HALL": "Center",
+  "PEPPER CANYON": "PepCanyon",
+  "PETERSON HALL": "Peterson",
+  "MANDEVILLE AUD": "Mandeville",
+  "GALBRAITH HALL": "Galbraith",
+  "YORK HALL": "York",
+  "SOLIS HALL": "Solis",
+  "COGNITIVE SCIENCE": "CSB",
+  "FRANKLIN ANTONIO": "FAH",
+  "GEISEL LIBRARY": "Geisel",
+  "PRICE CENTER": "Price",
+  "MOSAIC HALL": "Mosaic",
+  "LEDDEN AUD": "Ledden",
+  "JEANNIE HALL": "Jeannie",
+  "RIDGE WALK": "RWAC",
+  // Common abbreviations from Google Calendar
+  "EBU3B": "CSE",
+  "EBU3": "CSE",
+  "EBUI": "CSE",
+  "APM": "Mandeville", // close enough
 };
 
 /**
@@ -116,20 +139,15 @@ const ALIAS_MAP: Record<string, string> = {
 export function parseLocationToBuilding(location: string): string | null {
   if (!location) return null;
   const normalized = location.trim().toUpperCase();
+  const words = normalized.split(/[\s,/]+/).filter(Boolean);
 
-  // Try progressively shorter prefixes of the location string
-  const words = normalized.split(/[\s,/]+/);
-
-  // Try 2-word prefix first (e.g., "WARREN LECTURE")
-  if (words.length >= 2) {
-    const twoWord = `${words[0]} ${words[1]}`;
-    if (ALIAS_MAP[twoWord]) return ALIAS_MAP[twoWord];
+  // Try 2-word sliding window (e.g., "COMPUTER SCIENCE", "CENTER HALL", "WARREN LECTURE")
+  for (let i = 0; i < words.length - 1; i++) {
+    const pair = `${words[i]} ${words[i + 1]}`;
+    if (ALIAS_MAP[pair]) return ALIAS_MAP[pair];
   }
 
-  // Try first word
-  if (ALIAS_MAP[words[0]]) return ALIAS_MAP[words[0]];
-
-  // Try each word individually (handles "Mosaic MOS 0113" → "MOS" → Mosaic)
+  // Try each word individually
   for (const word of words) {
     if (ALIAS_MAP[word]) return ALIAS_MAP[word];
   }

@@ -7,18 +7,21 @@ import { FocusTimer } from "@/components/productivity/FocusTimer";
 import { TinyTasks } from "@/components/productivity/TinyTasks";
 import { EVENT_STYLE } from "./types";
 import type { CalendarEvent, EventType, CalendarView } from "./types";
-import { ALL_RESIDENCES, locationLabel } from "@/lib/travel/walking-times";
+import { ALL_RESIDENCES, ALL_BUILDINGS, locationLabel } from "@/lib/travel/walking-times";
+import type { TravelPreferences, LocationOverride } from "@/hooks/useTravelPreferences";
 
 const ALL_TYPES: EventType[] = [
   "lecture",
   "discussion",
   "lab",
   "office_hours",
+  "final",
   "travel",
   "study",
   "task",
   "reminder",
   "personal",
+  "google",
 ];
 
 interface CalendarSidebarProps {
@@ -30,10 +33,12 @@ interface CalendarSidebarProps {
   onNavigateToDate: (d: Date) => void;
   onViewChange: (v: CalendarView) => void;
   onToggleType: (t: EventType) => void;
-  homeBase: string | null;
-  travelEnabled: boolean;
+  travelPrefs: TravelPreferences;
   onHomeBaseChange: (v: string | null) => void;
   onTravelToggle: (v: boolean) => void;
+  onTravelForType: (type: string, enabled: boolean) => void;
+  onAddLocationOverride: (o: Omit<LocationOverride, "id">) => void;
+  onRemoveLocationOverride: (id: string) => void;
 }
 
 type SidebarSection = "upcoming" | "focus" | "tasks" | "filters" | "travel";
@@ -46,10 +51,12 @@ export function CalendarSidebar({
   onSelectEvent,
   onNavigateToDate,
   onToggleType,
-  homeBase,
-  travelEnabled,
+  travelPrefs,
   onHomeBaseChange,
   onTravelToggle,
+  onTravelForType,
+  onAddLocationOverride,
+  onRemoveLocationOverride,
 }: CalendarSidebarProps) {
   const [openSection, setOpenSection] = useState<SidebarSection>("upcoming");
 
@@ -64,9 +71,9 @@ export function CalendarSidebar({
     .sort((a, b) => a.startTime.getTime() - b.startTime.getTime())[0];
 
   return (
-    <aside className="w-56 border-r border-sky-100/60 glass flex flex-col overflow-y-auto shrink-0">
+    <aside className="w-48 border-r border-gray-200/80 bg-white/90 flex flex-col overflow-y-auto shrink-0">
       {/* Mini calendar */}
-      <div className="p-4 border-b border-sky-100/60">
+      <div className="p-4 border-b border-gray-200/60">
         <MiniCalendar
           selectedDate={currentDate}
           events={filteredEvents}
@@ -76,7 +83,7 @@ export function CalendarSidebar({
 
       {/* Next up */}
       {nextEvent && (
-        <div className="px-4 py-3 border-b border-sky-100/60">
+        <div className="px-4 py-3 border-b border-gray-200/60">
           <p className="text-xs font-semibold text-sky-400 uppercase tracking-wider mb-2">
             Next up
           </p>
@@ -105,10 +112,10 @@ export function CalendarSidebar({
       {/* Collapsible sections */}
       <div className="flex-1 overflow-y-auto">
         {/* Upcoming events */}
-        <div className="border-b border-sky-100/60">
+        <div className="border-b border-gray-200/60">
           <button
             onClick={() => toggle("upcoming")}
-            className="w-full flex items-center justify-between px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider hover:bg-sky-50/50 transition-colors"
+            className="w-full flex items-center justify-between px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider hover:bg-gray-50 transition-colors"
           >
             Upcoming
             <span className="text-sky-300 normal-case font-normal text-sm">
@@ -127,10 +134,10 @@ export function CalendarSidebar({
         </div>
 
         {/* Filters */}
-        <div className="border-b border-sky-100/60">
+        <div className="border-b border-gray-200/60">
           <button
             onClick={() => toggle("filters")}
-            className="w-full flex items-center justify-between px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider hover:bg-sky-50/50 transition-colors"
+            className="w-full flex items-center justify-between px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider hover:bg-gray-50 transition-colors"
           >
             Categories
             <span className="text-sky-300 normal-case font-normal text-sm">
@@ -147,7 +154,7 @@ export function CalendarSidebar({
                     key={type}
                     onClick={() => onToggleType(type)}
                     className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs transition-colors
-                      ${hidden ? "opacity-40" : "hover:bg-sky-50/50"}`}
+                      ${hidden ? "opacity-40" : "hover:bg-gray-50"}`}
                   >
                     <span className={`w-2 h-2 rounded-full shrink-0 ${s.dot}`} />
                     <span className="text-slate-600 capitalize">{s.label}</span>
@@ -162,10 +169,10 @@ export function CalendarSidebar({
         </div>
 
         {/* Travel settings */}
-        <div className="border-b border-sky-100/60">
+        <div className="border-b border-gray-200/60">
           <button
             onClick={() => toggle("travel")}
-            className="w-full flex items-center justify-between px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider hover:bg-sky-50/50 transition-colors"
+            className="w-full flex items-center justify-between px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider hover:bg-gray-50 transition-colors"
           >
             Travel
             <span className="text-sky-300 normal-case font-normal text-sm">
@@ -173,43 +180,22 @@ export function CalendarSidebar({
             </span>
           </button>
           {openSection === "travel" && (
-            <div className="px-3 pb-3 space-y-3">
-              <div>
-                <label className="text-xs text-slate-500 block mb-1">Home base</label>
-                <select
-                  value={homeBase ?? ""}
-                  onChange={(e) => onHomeBaseChange(e.target.value || null)}
-                  className="w-full text-xs rounded-lg border border-sky-200 bg-white px-2 py-1.5 text-slate-700 focus:outline-none focus:ring-1 focus:ring-sky-400"
-                >
-                  <option value="">Not set</option>
-                  {ALL_RESIDENCES.map((r) => (
-                    <option key={r} value={r}>{locationLabel(r)}</option>
-                  ))}
-                </select>
-              </div>
-              <label className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={travelEnabled}
-                  onChange={(e) => onTravelToggle(e.target.checked)}
-                  className="rounded border-sky-300 text-sky-500 focus:ring-sky-400"
-                />
-                Show travel blocks
-              </label>
-              {homeBase && (
-                <p className="text-xs text-slate-400">
-                  Walking times from {locationLabel(homeBase)} to your first class each day.
-                </p>
-              )}
-            </div>
+            <TravelSettings
+              prefs={travelPrefs}
+              onHomeBaseChange={onHomeBaseChange}
+              onTravelToggle={onTravelToggle}
+              onTravelForType={onTravelForType}
+              onAddOverride={onAddLocationOverride}
+              onRemoveOverride={onRemoveLocationOverride}
+            />
           )}
         </div>
 
         {/* Focus timer */}
-        <div className="border-b border-sky-100/60">
+        <div className="border-b border-gray-200/60">
           <button
             onClick={() => toggle("focus")}
-            className="w-full flex items-center justify-between px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider hover:bg-sky-50/50 transition-colors"
+            className="w-full flex items-center justify-between px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider hover:bg-gray-50 transition-colors"
           >
             Focus timer
             <span className="text-sky-300 normal-case font-normal text-sm">
@@ -227,7 +213,7 @@ export function CalendarSidebar({
         <div>
           <button
             onClick={() => toggle("tasks")}
-            className="w-full flex items-center justify-between px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider hover:bg-sky-50/50 transition-colors"
+            className="w-full flex items-center justify-between px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider hover:bg-gray-50 transition-colors"
           >
             Tasks
             <span className="text-sky-300 normal-case font-normal text-sm">
@@ -242,5 +228,165 @@ export function CalendarSidebar({
         </div>
       </div>
     </aside>
+  );
+}
+
+// ── Travel Settings sub-component ──────────────────────────────────────────
+
+const TYPE_TOGGLES: { key: string; label: string; prefsKey: keyof TravelPreferences }[] = [
+  { key: "lectures", label: "Lectures", prefsKey: "travelForLectures" },
+  { key: "discussions", label: "Discussions", prefsKey: "travelForDiscussions" },
+  { key: "labs", label: "Labs", prefsKey: "travelForLabs" },
+  { key: "officeHours", label: "Office Hours", prefsKey: "travelForOfficeHours" },
+];
+
+function TravelSettings({
+  prefs,
+  onHomeBaseChange,
+  onTravelToggle,
+  onTravelForType,
+  onAddOverride,
+  onRemoveOverride,
+}: {
+  prefs: TravelPreferences;
+  onHomeBaseChange: (v: string | null) => void;
+  onTravelToggle: (v: boolean) => void;
+  onTravelForType: (type: string, enabled: boolean) => void;
+  onAddOverride: (o: Omit<LocationOverride, "id">) => void;
+  onRemoveOverride: (id: string) => void;
+}) {
+  const [showAddOverride, setShowAddOverride] = useState(false);
+  const [overrideGap, setOverrideGap] = useState("30");
+  const [overrideLocation, setOverrideLocation] = useState("");
+
+  const allLocations = [...ALL_RESIDENCES, ...ALL_BUILDINGS];
+
+  return (
+    <div className="px-3 pb-3 space-y-3">
+      {/* Master toggle */}
+      <label className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer">
+        <input
+          type="checkbox"
+          checked={prefs.travelEventsEnabled}
+          onChange={(e) => onTravelToggle(e.target.checked)}
+          className="rounded border-sky-300 text-sky-500 focus:ring-sky-400"
+        />
+        Show travel blocks
+      </label>
+
+      {prefs.travelEventsEnabled && (
+        <>
+          {/* Home base */}
+          <div>
+            <label className="text-xs text-slate-500 block mb-1">Home base</label>
+            <select
+              value={prefs.homeBase ?? ""}
+              onChange={(e) => onHomeBaseChange(e.target.value || null)}
+              className="w-full text-xs rounded-lg border border-sky-200 bg-white px-2 py-1.5 text-slate-700 focus:outline-none focus:ring-1 focus:ring-sky-400"
+            >
+              <option value="">Not set</option>
+              {ALL_RESIDENCES.map((r) => (
+                <option key={r} value={r}>{locationLabel(r)}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Per-type toggles */}
+          <div>
+            <p className="text-xs text-slate-500 mb-1.5">Show travel for:</p>
+            <div className="space-y-1">
+              {TYPE_TOGGLES.map(({ key, label, prefsKey }) => (
+                <label key={key} className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={prefs[prefsKey] as boolean}
+                    onChange={(e) => onTravelForType(key, e.target.checked)}
+                    className="rounded border-sky-300 text-sky-500 focus:ring-sky-400"
+                  />
+                  {label}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Location overrides */}
+          <div>
+            <p className="text-xs text-slate-500 mb-1.5">During long gaps, I'll be at:</p>
+            {prefs.locationOverrides.map((o) => (
+              <div key={o.id} className="flex items-center gap-1.5 text-xs text-slate-600 mb-1">
+                <span className="truncate flex-1">
+                  {locationLabel(o.location)} (gap &ge; {o.minGapMinutes}m)
+                </span>
+                <button
+                  onClick={() => onRemoveOverride(o.id)}
+                  className="text-red-400 hover:text-red-600 shrink-0"
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+            {showAddOverride ? (
+              <div className="space-y-1.5 mt-1">
+                <div className="flex items-center gap-1 text-xs">
+                  <span className="text-slate-400 shrink-0">Gap &ge;</span>
+                  <input
+                    type="number"
+                    min={10}
+                    max={180}
+                    value={overrideGap}
+                    onChange={(e) => setOverrideGap(e.target.value)}
+                    className="w-12 text-center border border-sky-200 rounded px-1 py-0.5 text-xs"
+                  />
+                  <span className="text-slate-400">min →</span>
+                </div>
+                <select
+                  value={overrideLocation}
+                  onChange={(e) => setOverrideLocation(e.target.value)}
+                  className="w-full text-xs rounded border border-sky-200 bg-white px-2 py-1 text-slate-700"
+                >
+                  <option value="">Select location...</option>
+                  {allLocations.map((loc) => (
+                    <option key={loc} value={loc}>{locationLabel(loc)}</option>
+                  ))}
+                </select>
+                <div className="flex gap-1">
+                  <button
+                    onClick={() => {
+                      if (overrideLocation && overrideGap) {
+                        onAddOverride({
+                          minGapMinutes: parseInt(overrideGap) || 30,
+                          location: overrideLocation,
+                          label: locationLabel(overrideLocation),
+                        });
+                        setShowAddOverride(false);
+                        setOverrideLocation("");
+                        setOverrideGap("30");
+                      }
+                    }}
+                    disabled={!overrideLocation}
+                    className="text-xs text-sky-600 font-medium disabled:opacity-40"
+                  >
+                    Add
+                  </button>
+                  <button
+                    onClick={() => setShowAddOverride(false)}
+                    className="text-xs text-slate-400"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowAddOverride(true)}
+                className="text-xs text-sky-500 hover:text-sky-700 mt-1"
+              >
+                + Add location rule
+              </button>
+            )}
+          </div>
+        </>
+      )}
+    </div>
   );
 }

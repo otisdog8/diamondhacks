@@ -155,6 +155,7 @@ SCHEDULE ENTRY RULES:
 - Each schedule entry must have a SINGLE day name: "Monday", "Tuesday", etc. — NOT "TuTh", "MWF", or "varies".
   For multi-day classes, create separate entries per day.
 - "startTime"/"endTime" must be 24h format like "14:00". Omit entries where times are unknown.
+- "location" must use the SHORT campus building code + room number, e.g. "WLH 2001", "PETER 108", "CSE 4258", "CENTR 101", "FAH 1301". Do NOT use full addresses or full building names like "Warren Lecture Hall" — use "WLH" instead.
 - Finals/midterms: include with type "final"/"midterm" — these are one-time events, not weekly.
 
 Return ALL data as JSON in your output. Include everything you found previously plus new discoveries.
@@ -166,17 +167,27 @@ const EXTERNAL_URL_PROMPT = (externalUrl: string) => `The user wants you to craw
 Navigate to: ${externalUrl}
 
 Extract ALL information you can find about courses/classes on this site:
-- Course names, codes, instructors
+- Course names and course codes (e.g. "CSE 110", "COGS 13" — the short department + number, NOT the full name)
+- Instructors
 - Schedules: days, times, locations
-- Syllabus content, office hours
+- Syllabus content, office hours (include who is hosting each OH session)
 - Any links to other resources
 - Assignment info, section info
 - ANYTHING that looks like it relates to a class
 
 If the site requires login, STOP and return what the page shows — the user will log in manually.
 
+SCHEDULE ENTRY RULES:
+- "type" must be one of: "lecture", "discussion", "lab", "office_hours", "final", "midterm", "other"
+- For office_hours entries, include a "host" field with the name of who is holding them (e.g. "TA Josh", "Prof. Rossano"). Create separate entries for each person's office hours.
+- "dayOfWeek" must be a SINGLE standard day name: "Monday", "Tuesday", etc. — NOT "TuTh", "MWF", or "varies".
+  If a class meets on multiple days, create SEPARATE entries for each day.
+- "startTime"/"endTime" must be in 24-hour format like "14:00" or "09:00". Do NOT use "varies" — omit if unknown.
+- "location" must use the SHORT campus building code + room number, e.g. "WLH 2001", "PETER 108", "CSE 4258". Do NOT use full addresses.
+- Finals/midterms: include with type "final"/"midterm".
+
 CRITICAL: Return ONLY a JSON object as your final output — no file saving, no workspace:
-{ "courses": [{ "canvasId": "external", "name": "...", "code": "...", "instructor": "...", "term": "...", "schedule": [{"dayOfWeek": "Monday", "startTime": "14:00", "endTime": "15:20", "location": "...", "type": "lecture"}], "syllabusText": "...", "syllabusUrl": "${externalUrl}", "externalLinks": ["https://piazza.com/class/abc123"], "description": "...", "rawNotes": "everything else you found" }] }`;
+{ "courses": [{ "canvasId": "external", "name": "Field Methods: Cognition in the Wild", "code": "COGS 13", "instructor": "...", "term": "Spring 2026", "schedule": [{"dayOfWeek": "Tuesday", "startTime": "12:30", "endTime": "13:50", "location": "PETER 108", "type": "lecture"}, {"dayOfWeek": "Wednesday", "startTime": "14:00", "endTime": "15:00", "location": "CSE 4258", "type": "office_hours", "host": "Prof. Rossano"}], "syllabusText": "...", "syllabusUrl": "${externalUrl}", "externalLinks": ["https://piazza.com/class/abc123"], "description": "...", "rawNotes": "everything else you found" }] }`;
 
 /**
  * Step 2: Scrape using the SAME session the user logged into.

@@ -35,10 +35,10 @@ function computeTravelMinutes(
   }
   if (!fromName) fromName = homeBase;
   if (!fromName) return 10;
-  if (fromName === toBuilding) return 2; // same building, just buffer
+  if (fromName === toBuilding) return 0;
 
   const mins = getWalkingMinutes(fromName, toBuilding);
-  return mins != null ? mins + 2 : 10; // +2 peak buffer
+  return mins != null ? mins : 10;
 }
 
 export function SmartDayView() {

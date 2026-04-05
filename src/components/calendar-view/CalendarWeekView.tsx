@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { isSameDay, isToday, formatShortTime } from "./types";
+import { isSameDay, isToday, formatShortTime, formatTime, EVENT_STYLE } from "./types";
 import { CalendarEventCard } from "./CalendarEventCard";
 import type { CalendarEvent } from "./types";
 
@@ -89,6 +89,8 @@ interface CalendarWeekViewProps {
   events: CalendarEvent[];
   selectedEventId: string | null;
   onSelectEvent: (id: string | null) => void;
+  skippedEventIds?: string[];
+  onToggleSkip?: (id: string) => void;
   onNavigateToDate: (d: Date) => void;
 }
 
@@ -98,10 +100,14 @@ export function CalendarWeekView({
   selectedEventId,
   onSelectEvent,
   onNavigateToDate,
+  skippedEventIds = [],
+  onToggleSkip,
 }: CalendarWeekViewProps) {
   const days = getWeekDays(currentDate);
   const [now, setNow] = useState(new Date());
   const scrollRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [popoverPos, setPopoverPos] = useState<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 60_000);
@@ -121,9 +127,9 @@ export function CalendarWeekView({
   const isCurrentWeek = days.some((d) => isToday(d));
 
   return (
-    <div className="flex flex-col h-full">
+    <div ref={containerRef} className="flex flex-col h-full relative">
       {/* Day headers */}
-      <div className="flex border-b border-sky-100/40 bg-white shrink-0">
+      <div className="flex border-b border-gray-100 bg-white shrink-0">
         <div className="w-14 shrink-0" /> {/* spacer for time col */}
         {days.map((day, i) => {
           const today = isToday(day);
@@ -133,12 +139,12 @@ export function CalendarWeekView({
               className="flex-1 py-3 text-center cursor-pointer hover:bg-sky-50/50 transition-colors"
               onClick={() => onNavigateToDate(day)}
             >
-              <p className="text-xs font-semibold text-sky-400 uppercase tracking-wider">
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
                 {DAY_LABELS[day.getDay()]}
               </p>
               <div
                 className={`mx-auto mt-1 w-8 h-8 flex items-center justify-center rounded-full text-sm font-semibold
-                  ${today ? "bg-sky-400 text-white" : "text-sky-700"}`}
+                  ${today ? "bg-blue-600 text-white" : "text-gray-900"}`}
               >
                 {day.getDate()}
               </div>
@@ -155,7 +161,7 @@ export function CalendarWeekView({
             {HOURS.map((h) => (
               <div
                 key={h}
-                className="absolute right-2 text-xs text-sky-400"
+                className="absolute right-2 text-xs text-gray-400"
                 style={{ top: `${(h - START_HOUR) * PX_PER_HOUR - 8}px` }}
               >
                 {h === 12
@@ -176,14 +182,14 @@ export function CalendarWeekView({
             return (
               <div
                 key={di}
-                className={`flex-1 relative border-l border-sky-100/40 ${today ? "bg-sky-50/30" : ""}`}
+                className={`flex-1 relative border-l border-gray-100 overflow-hidden ${today ? "bg-blue-50/30" : ""}`}
                 style={{ height: `${TOTAL_PX}px` }}
               >
                 {/* Hour lines */}
                 {HOURS.map((h) => (
                   <div
                     key={h}
-                    className="absolute left-0 right-0 border-t border-sky-100/40"
+                    className="absolute left-0 right-0 border-t border-gray-100"
                     style={{ top: `${(h - START_HOUR) * PX_PER_HOUR}px` }}
                   />
                 ))}
@@ -192,7 +198,7 @@ export function CalendarWeekView({
                 {HOURS.map((h) => (
                   <div
                     key={`h-${h}`}
-                    className="absolute left-0 right-0 border-t border-sky-50"
+                    className="absolute left-0 right-0 border-t border-gray-50"
                     style={{ top: `${(h - START_HOUR) * PX_PER_HOUR + PX_PER_HOUR / 2}px` }}
                   />
                 ))}
@@ -201,11 +207,11 @@ export function CalendarWeekView({
                 {today && isCurrentWeek && (
                   <>
                     <div
-                      className="absolute left-0 right-0 border-t-2 border-sky-400 z-10 pointer-events-none"
+                      className="absolute left-0 right-0 border-t-2 border-red-400 z-10 pointer-events-none"
                       style={{ top: `${nowTop}px` }}
                     />
                     <div
-                      className="absolute w-2 h-2 rounded-full bg-sky-400 z-10 pointer-events-none"
+                      className="absolute w-2 h-2 rounded-full bg-red-400 z-10 pointer-events-none"
                       style={{ top: `${nowTop - 4}px`, left: "-4px" }}
                     />
                   </>
@@ -215,8 +221,12 @@ export function CalendarWeekView({
                 {layout.map(({ event, col, totalCols }) => {
                   const top = timeToPixels(event.startTime);
                   const height = durationToPixels(event.startTime, event.endTime);
-                  const width = `calc(${100 / totalCols}% - 4px)`;
-                  const left = `calc(${(col / totalCols) * 100}% + 2px)`;
+                  // Overlapping events: divide space evenly, slight overlap via padding
+                  const colWidth = 100 / totalCols;
+                  const leftPct = col * colWidth;
+                  const width = `calc(${colWidth}% - 2px)`;
+                  const left = `calc(${leftPct}% + 1px)`;
+                  const zIndex = event.id === selectedEventId ? 30 : 10 + col;
 
                   return (
                     <CalendarEventCard
@@ -225,12 +235,20 @@ export function CalendarWeekView({
                       selected={event.id === selectedEventId}
                       onClick={(e) => {
                         e.stopPropagation();
-                        onSelectEvent(
-                          event.id === selectedEventId ? null : event.id
-                        );
+                        const selecting = event.id !== selectedEventId;
+                        onSelectEvent(selecting ? event.id : null);
+                        if (selecting && containerRef.current) {
+                          const rect = containerRef.current.getBoundingClientRect();
+                          setPopoverPos({
+                            x: Math.min(e.clientX - rect.left, rect.width - 280),
+                            y: Math.min(e.clientY - rect.top + 10, rect.height - 200),
+                          });
+                        } else {
+                          setPopoverPos(null);
+                        }
                       }}
-                      style={{ position: "absolute", top, height, width, left, zIndex: event.id === selectedEventId ? 20 : 10 }}
-                      className="rounded-lg"
+                      style={{ position: "absolute", top, height, width, left, zIndex }}
+                      className="rounded-lg shadow-sm"
                     />
                   );
                 })}
@@ -239,6 +257,74 @@ export function CalendarWeekView({
           })}
         </div>
       </div>
+
+      {/* Selected event detail popover */}
+      {selectedEventId && popoverPos && (() => {
+        const ev = events.find((e) => e.id === selectedEventId);
+        if (!ev) return null;
+        const style = EVENT_STYLE[ev.type];
+        return (
+          <div
+            className="absolute z-50 w-64 bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden"
+            style={{ left: popoverPos.x, top: popoverPos.y }}
+          >
+            <div className="p-3 border-b border-gray-50 flex items-start justify-between">
+              <div>
+                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${style.pill}`}>
+                  {style.label}
+                </span>
+                <h3 className="text-sm font-semibold text-stone-800 mt-1.5 leading-snug">
+                  {ev.title}
+                </h3>
+              </div>
+              <button
+                onClick={() => onSelectEvent(null)}
+                className="text-stone-400 hover:text-stone-600 text-lg leading-none ml-2"
+              >
+                ×
+              </button>
+            </div>
+            <div className="p-3 space-y-2">
+              <div className="flex items-center gap-2 text-sm text-stone-600">
+                <span className="text-stone-400">◷</span>
+                <span>
+                  {formatTime(ev.startTime)}
+                  {ev.endTime && ev.endTime.getTime() !== ev.startTime.getTime() && ` – ${formatTime(ev.endTime)}`}
+                </span>
+              </div>
+              {ev.location && (
+                <div className="flex items-center gap-2 text-sm text-stone-600">
+                  <span className="text-stone-400">⌖</span>
+                  <span>{ev.location}</span>
+                </div>
+              )}
+              {ev.host && (
+                <div className="flex items-center gap-2 text-sm text-stone-600">
+                  <span className="text-stone-400">◉</span>
+                  <span>{ev.host}</span>
+                </div>
+              )}
+              {ev.description && (
+                <p className="text-xs text-stone-500 pt-1 border-t border-stone-100">
+                  {ev.description}
+                </p>
+              )}
+              {onToggleSkip && ev.type !== "travel" && (
+                <button
+                  onClick={() => onToggleSkip(ev.id)}
+                  className={`text-xs mt-1 pt-1 border-t border-stone-100 w-full text-left ${
+                    skippedEventIds.includes(ev.id)
+                      ? "text-green-600 hover:text-green-700"
+                      : "text-stone-400 hover:text-red-500"
+                  }`}
+                >
+                  {skippedEventIds.includes(ev.id) ? "Mark as attending" : "Skip (no travel)"}
+                </button>
+              )}
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

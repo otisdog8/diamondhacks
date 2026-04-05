@@ -16,12 +16,44 @@ function timeToPixels(date: Date): number {
   return (date.getHours() - START_HOUR + date.getMinutes() / 60) * PX_PER_HOUR;
 }
 
+interface LayoutEvent { event: CalendarEvent; col: number; totalCols: number; }
+
+function layoutDayEvents(events: CalendarEvent[]): LayoutEvent[] {
+  const sorted = [...events].sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
+  const result: LayoutEvent[] = sorted.map((e) => ({ event: e, col: 0, totalCols: 1 }));
+  const cols: CalendarEvent[][] = [];
+  for (let i = 0; i < sorted.length; i++) {
+    let placed = false;
+    for (let c = 0; c < cols.length; c++) {
+      if (cols[c][cols[c].length - 1].endTime <= sorted[i].startTime) {
+        cols[c].push(sorted[i]);
+        result[i].col = c;
+        placed = true;
+        break;
+      }
+    }
+    if (!placed) { result[i].col = cols.length; cols.push([sorted[i]]); }
+  }
+  for (let i = 0; i < result.length; i++) {
+    let maxCol = result[i].col;
+    for (let j = 0; j < result.length; j++) {
+      if (i !== j && result[i].event.startTime < result[j].event.endTime && result[j].event.startTime < result[i].event.endTime) {
+        maxCol = Math.max(maxCol, result[j].col);
+      }
+    }
+    result[i].totalCols = maxCol + 1;
+  }
+  return result;
+}
+
 interface CalendarDayViewProps {
   currentDate: Date;
   events: CalendarEvent[];
   selectedEventId: string | null;
   onSelectEvent: (id: string | null) => void;
   onNavigateToDate: (d: Date) => void;
+  skippedEventIds?: string[];
+  onToggleSkip?: (id: string) => void;
 }
 
 export function CalendarDayView({
@@ -29,6 +61,8 @@ export function CalendarDayView({
   events,
   selectedEventId,
   onSelectEvent,
+  skippedEventIds = [],
+  onToggleSkip,
 }: CalendarDayViewProps) {
   const [now, setNow] = useState(new Date());
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -49,6 +83,9 @@ export function CalendarDayView({
   const dayEvents = events
     .filter((e) => isSameDay(e.startTime, currentDate))
     .sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
+
+  // Layout overlapping events in columns
+  const dayLayout = layoutDayEvents(dayEvents);
 
   const today = isToday(currentDate);
   const nowTop = timeToPixels(now);
@@ -136,12 +173,14 @@ export function CalendarDayView({
               )}
 
               {/* Events */}
-              {dayEvents.map((event) => {
+              {dayLayout.map(({ event, col, totalCols }) => {
                 const top = timeToPixels(event.startTime);
                 const height = Math.max(
                   28,
                   ((event.endTime.getTime() - event.startTime.getTime()) / 3_600_000) * PX_PER_HOUR - 2
                 );
+                const colWidth = 100 / totalCols;
+                const leftPct = col * colWidth;
                 return (
                   <CalendarEventCard
                     key={event.id}
@@ -156,10 +195,11 @@ export function CalendarDayView({
                       position: "absolute",
                       top,
                       height,
-                      left: 4,
-                      right: 16,
-                      zIndex: event.id === selectedEventId ? 20 : 10,
+                      width: `calc(${colWidth}% - 4px)`,
+                      left: `calc(${leftPct}% + 2px)`,
+                      zIndex: event.id === selectedEventId ? 30 : 10 + col,
                     }}
+                    className="shadow-sm"
                   />
                 );
               })}
@@ -207,6 +247,12 @@ export function CalendarDayView({
                 <span>{selectedEvent.location}</span>
               </div>
             )}
+            {selectedEvent.host && (
+              <div className="flex items-center gap-2 text-sm text-stone-600">
+                <span className="text-stone-400">◉</span>
+                <span>{selectedEvent.host}</span>
+              </div>
+            )}
             {selectedEvent.classCode && (
               <div className="flex items-center gap-2 text-sm text-stone-600">
                 <span className="text-stone-400">◻</span>
@@ -217,6 +263,18 @@ export function CalendarDayView({
               <p className="text-sm text-stone-500 pt-1 border-t border-stone-100">
                 {selectedEvent.description}
               </p>
+            )}
+            {onToggleSkip && selectedEvent.type !== "travel" && (
+              <button
+                onClick={() => onToggleSkip(selectedEvent.id)}
+                className={`text-xs mt-2 pt-2 border-t border-stone-100 w-full text-left ${
+                  skippedEventIds.includes(selectedEvent.id)
+                    ? "text-green-600 hover:text-green-700"
+                    : "text-stone-400 hover:text-red-500"
+                }`}
+              >
+                {skippedEventIds.includes(selectedEvent.id) ? "Mark as attending" : "Skip (no travel)"}
+              </button>
             )}
           </div>
         </div>

@@ -36,6 +36,8 @@ function detectConflicts(classes: ReturnType<typeof useClasses>["classes"]): Set
   classes.forEach((cls) => {
     if (!cls.enabled) return;
     cls.schedule.forEach((s) => {
+      const t = s.type?.toLowerCase() ?? "";
+      if (t === "office_hours" || t === "final" || t === "midterm") return;
       slots.push({
         classId: cls.id,
         day: s.dayOfWeek,

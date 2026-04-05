@@ -11,7 +11,7 @@ import { useClasses } from "@/hooks/useClasses";
 import { useGoogleCalendarEvents } from "@/hooks/useGoogleCalendarEvents";
 import { useTravelPreferences } from "@/hooks/useTravelPreferences";
 import { generateTravelEvents } from "@/lib/travel/generate-travel-events";
-import { getQuarterDates, inferQuarterWeeks, getFirstDayInQuarter } from "@/lib/quarter-dates";
+import { getQuarterDates, inferQuarterWeeks, getFirstDayInQuarter, getFinalExamDate } from "@/lib/quarter-dates";
 import type { CalendarView, EventType, CalendarEvent } from "./types";
 import type { NewCalendarEvent } from "./TimeSelectionModal";
 
@@ -47,10 +47,29 @@ function classesToCalendarEvents(
 
     const weeks = inferQuarterWeeks(cls.term);
 
-    for (const slot of cls.schedule) {
-      // Skip one-time events (finals, midterms) — they aren't weekly recurring
+    for (let si = 0; si < cls.schedule.length; si++) {
+      const slot = cls.schedule[si];
       const slotType = slot.type?.toLowerCase() ?? "";
-      if (slotType === "final" || slotType === "midterm") continue;
+
+      // Finals/midterms: generate a SINGLE event on the correct date, not weekly
+      if (slotType === "final" || slotType === "midterm") {
+        const examDate = getFinalExamDate(cls.term, slot.dayOfWeek);
+        if (examDate) {
+          const date = new Date(examDate + "T00:00:00");
+          const label = slotType === "final" ? "FINAL" : "MIDTERM";
+          events.push({
+            id: `${slotType}-${cls.id}-s${si}`,
+            title: `${label}: ${cls.code}`,
+            classCode: cls.code,
+            startTime: parseT(slot.startTime, date),
+            endTime: parseT(slot.endTime, date),
+            type: "final" as EventType,
+            location: slot.location,
+            description: `${cls.name} — ${label.charAt(0) + label.slice(1).toLowerCase()} Exam`,
+          });
+        }
+        continue;
+      }
 
       const type: EventType = slotType === "office_hours" || slotType.includes("office")
         ? "office_hours"
@@ -70,7 +89,7 @@ function classesToCalendarEvents(
           date.setDate(firstDate.getDate() + week * 7);
 
           events.push({
-            id: `cls-${cls.id}-${slot.dayOfWeek}-${slot.type}-w${week}`,
+            id: `cls-${cls.id}-s${si}-w${week}`,
             title: type === "office_hours" && slot.host ? `${cls.code} OH — ${slot.host}` : cls.code,
             classCode: cls.code,
             startTime: parseT(slot.startTime, date),
@@ -172,7 +191,11 @@ export function CalendarLayout({ showGoogleEvents = true }: CalendarLayoutProps)
 
   const { classes } = useClasses();
   const { events: googleEvents, connected: googleConnected } = useGoogleCalendarEvents();
-  const { prefs: travelPrefs, setHomeBase, setTravelEnabled } = useTravelPreferences();
+  const {
+    prefs: travelPrefs, setHomeBase, setTravelEnabled,
+    setTravelForType, addLocationOverride, removeLocationOverride,
+    toggleSkippedEvent,
+  } = useTravelPreferences();
 
   const classCodes = useMemo(
     () => new Set(classes.map((c) => c.code)),
@@ -215,8 +238,8 @@ export function CalendarLayout({ showGoogleEvents = true }: CalendarLayoutProps)
 
   const travelEvents = useMemo(() => {
     if (!travelPrefs.travelEventsEnabled) return [];
-    return generateTravelEvents(baseEvents, travelPrefs.homeBase);
-  }, [baseEvents, travelPrefs.travelEventsEnabled, travelPrefs.homeBase]);
+    return generateTravelEvents(baseEvents, travelPrefs.homeBase, travelPrefs);
+  }, [baseEvents, travelPrefs]);
 
   const allEvents = useMemo(
     () => [...baseEvents, ...travelEvents, ...userEvents],
@@ -276,10 +299,12 @@ export function CalendarLayout({ showGoogleEvents = true }: CalendarLayoutProps)
       setCurrentDate(d);
       if (view !== "day") setView("day");
     },
+    skippedEventIds: travelPrefs.skippedEventIds,
+    onToggleSkip: toggleSkippedEvent,
   };
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-gradient-to-br from-sky-50 via-white to-cyan-50 z-40">
+    <div className="flex flex-col overflow-hidden" style={{ height: "calc(100vh - 57px)" }}>
       <CalendarTopBar
         currentDate={currentDate}
         view={view}
@@ -298,12 +323,14 @@ export function CalendarLayout({ showGoogleEvents = true }: CalendarLayoutProps)
           onNavigateToDate={goToDate}
           onViewChange={setView}
           onToggleType={toggleType}
-          homeBase={travelPrefs.homeBase}
-          travelEnabled={travelPrefs.travelEventsEnabled}
+          travelPrefs={travelPrefs}
           onHomeBaseChange={setHomeBase}
           onTravelToggle={setTravelEnabled}
+          onTravelForType={setTravelForType}
+          onAddLocationOverride={addLocationOverride}
+          onRemoveLocationOverride={removeLocationOverride}
         />
-        <main className="flex-1 overflow-hidden bg-white/80 backdrop-blur-sm">
+        <main className="flex-1 overflow-hidden bg-white">
           {view === "month" && <CalendarMonthView {...sharedProps} />}
           {view === "week" && <CalendarWeekView {...sharedProps} />}
           {view === "day" && <CalendarDayView {...sharedProps} />}
