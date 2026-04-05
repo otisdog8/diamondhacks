@@ -1,23 +1,19 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Poppins } from "next/font/google";
 import { AuthProvider } from "@/context/AuthContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { ToastProvider } from "@/components/ui/Toast";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const poppins = Poppins({
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-poppins",
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "CanvasCal - Class Schedule to Calendar",
-  description: "Import your Canvas class schedule to Google Calendar automatically",
+  title: "inbtwn — Schedule Smarter",
+  description: "Import your Canvas class schedule, track assignments, and own your time.",
 };
 
 export default function RootLayout({
@@ -28,10 +24,13 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={poppins.variable + " h-full antialiased"}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col bg-gradient-to-br from-sky-50 via-white to-cyan-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 dark:text-gray-100">
+      <body
+        className="min-h-full flex flex-col bg-[#F8F9FD] dark:bg-gray-950 dark:text-gray-100"
+        style={{ fontFamily: "var(--font-poppins), sans-serif" }}
+      >
         <ThemeProvider>
           <AuthProvider>
             <ToastProvider>{children}</ToastProvider>

@@ -15,74 +15,122 @@ export default function Home() {
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <div className="h-8 w-8 rounded-full border-2 border-sky-400 border-t-transparent animate-spin" />
+        <div style={{ width: 32, height: 32, borderRadius: "50%", border: "3px solid #5B6CFF", borderTopColor: "transparent", animation: "spin 0.7s linear infinite" }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center px-4 py-16">
-      {/* Hero */}
-      <div className="max-w-xl text-center mb-14 animate-fade-up">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-100/80 text-sky-500 text-xs font-semibold tracking-widest uppercase mb-5 border border-sky-100">
-          Student Productivity
+    <div className="flex-1 flex flex-col" style={{ fontFamily: "var(--font-poppins), sans-serif" }}>
+
+      {/* ── Banner hero ── */}
+      <div style={{
+        background: "#1F1F2E",
+        position: "relative",
+        overflow: "hidden",
+        padding: "80px 24px 72px",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        minHeight: 360,
+      }}>
+        {/* Background glows */}
+        <div style={{ position: "absolute", top: -80, left: -80, width: 400, height: 400, borderRadius: "50%", background: "#5B6CFF", opacity: 0.07, filter: "blur(60px)" }} />
+        <div style={{ position: "absolute", bottom: -80, right: -80, width: 400, height: 400, borderRadius: "50%", background: "#9C8CFF", opacity: 0.07, filter: "blur(60px)" }} />
+
+        {/* Logo wordmark */}
+        <div style={{ position: "relative", marginBottom: 24, textAlign: "center" }}>
+          <span style={{ fontSize: 72, fontWeight: 800, letterSpacing: -3, lineHeight: 1 }}>
+            <span style={{ color: "#5B6CFF" }}>in</span>
+            <span style={{ color: "#F8F9FD" }}>btwn</span>
+          </span>
+          <p style={{ marginTop: 8, fontSize: 11, fontWeight: 400, letterSpacing: 5, color: "#6A6A80", textTransform: "uppercase" }}>
+            Schedule Smarter
+          </p>
         </div>
-        <h1 className="text-6xl font-extralight tracking-tight text-sky-900 leading-tight">
-          Canvas<span className="font-semibold text-sky-400">Cal</span>
-        </h1>
-        <p className="mt-5 text-lg text-slate-400 font-light leading-relaxed">
+
+        {/* Tagline */}
+        <p style={{ color: "#6A6A80", fontSize: 16, fontWeight: 400, maxWidth: 440, textAlign: "center", lineHeight: 1.7, marginBottom: 36 }}>
           A calm, intelligent schedule companion.<br />
           Import your Canvas classes. Own your time.
         </p>
-        <div className="flex gap-3 justify-center mt-8">
+
+        {/* CTAs */}
+        <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
           <Link href="/register">
-            <Button size="lg">Get started free</Button>
+            <button style={{
+              padding: "12px 28px", borderRadius: 10, fontSize: 14, fontWeight: 700,
+              background: "#5B6CFF", color: "#fff", border: "none", cursor: "pointer",
+              fontFamily: "inherit", transition: "opacity 0.15s",
+            }}
+              onMouseEnter={e => (e.currentTarget.style.opacity = "0.85")}
+              onMouseLeave={e => (e.currentTarget.style.opacity = "1")}
+            >
+              Get started free
+            </button>
           </Link>
           <Link href="/login">
-            <Button variant="secondary" size="lg">Sign in</Button>
+            <button style={{
+              padding: "12px 28px", borderRadius: 10, fontSize: 14, fontWeight: 600,
+              background: "rgba(255,255,255,0.07)", color: "#F8F9FD",
+              border: "1px solid rgba(255,255,255,0.1)", cursor: "pointer",
+              fontFamily: "inherit", transition: "background 0.15s",
+            }}
+              onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.13)")}
+              onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.07)")}
+            >
+              Sign in
+            </button>
           </Link>
         </div>
       </div>
 
-      {/* Feature cards */}
-      <div className="grid gap-4 sm:grid-cols-3 max-w-2xl w-full animate-fade-up">
-        {[
-          {
-            step: "01",
-            title: "Connect Canvas",
-            desc: "Log in once through a secure browser session. Your credentials never leave your device.",
-          },
-          {
-            step: "02",
-            title: "Import Classes",
-            desc: "AI navigates your Canvas courses and extracts your full schedule automatically.",
-          },
-          {
-            step: "03",
-            title: "Own Your Day",
-            desc: "See your week at a glance, find focus windows, and export directly to Google Calendar.",
-          },
-        ].map(({ step, title, desc }) => (
-          <div
-            key={step}
-            className="glass rounded-2xl p-5 text-left"
-          >
-            <span className="text-xs font-bold text-sky-300 tracking-widest">{step}</span>
-            <h3 className="mt-2 text-sm font-semibold text-sky-800">{title}</h3>
-            <p className="mt-1.5 text-sm text-slate-400 leading-relaxed">{desc}</p>
-          </div>
-        ))}
+      {/* ── Feature cards ── */}
+      <div style={{ background: "#F8F9FD", flex: 1, padding: "56px 24px" }}>
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+          gap: 16,
+          maxWidth: 720,
+          margin: "0 auto",
+        }}>
+          {[
+            {
+              step: "01",
+              color: "#5B6CFF",
+              title: "Connect Canvas",
+              desc: "Log in once through a secure browser session. Your credentials never leave your device.",
+            },
+            {
+              step: "02",
+              color: "#9C8CFF",
+              title: "Import Classes",
+              desc: "AI navigates your Canvas courses and extracts your full schedule automatically.",
+            },
+            {
+              step: "03",
+              color: "#FFB020",
+              title: "Own Your Day",
+              desc: "See your week at a glance, track assignments, and export directly to Google Calendar.",
+            },
+          ].map(({ step, color, title, desc }) => (
+            <div key={step} style={{
+              background: "#fff",
+              borderRadius: 16,
+              padding: "24px 20px",
+              border: "1px solid #e2e3f0",
+              boxShadow: "0 1px 4px rgba(31,31,46,0.05)",
+            }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color, letterSpacing: 2 }}>{step}</span>
+              <h3 style={{ marginTop: 8, fontSize: 15, fontWeight: 700, color: "#1F1F2E" }}>{title}</h3>
+              <p style={{ marginTop: 6, fontSize: 13, color: "#6A6A80", lineHeight: 1.65 }}>{desc}</p>
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* Soft decorative orbs */}
-      <div
-        className="fixed top-0 left-0 w-96 h-96 rounded-full pointer-events-none"
-        style={{ background: "radial-gradient(circle, rgba(186,230,253,0.3) 0%, transparent 70%)", filter: "blur(40px)", transform: "translate(-30%, -30%)" }}
-      />
-      <div
-        className="fixed bottom-0 right-0 w-80 h-80 rounded-full pointer-events-none"
-        style={{ background: "radial-gradient(circle, rgba(165,243,252,0.25) 0%, transparent 70%)", filter: "blur(40px)", transform: "translate(30%, 30%)" }}
-      />
     </div>
   );
 }

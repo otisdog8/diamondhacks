@@ -3,24 +3,31 @@
 @variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: #f0f9ff;
-  --foreground: #0c4a6e;
+  --background: #F8F9FD;
+  --foreground: #1F1F2E;
+  --indigo: #5B6CFF;
+  --lavender: #9C8CFF;
+  --amber: #FFB020;
+  --soft-red: #FF5C5C;
+  --muted: #6A6A80;
+  --border: #e2e3f0;
 }
 
 .dark {
-  --background: #0a0a0a;
+  --background: #0f0f1a;
   --foreground: #e5e7eb;
+  --border: rgba(255,255,255,0.08);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+  font-family: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ── Animations ────────────────────────────────────────────── */
+/* ── Animations ─────────────────────────────────────────────── */
 
 @keyframes breathe-glow {
   0%, 100% { opacity: 0.45; transform: scale(0.96); }
@@ -47,6 +54,10 @@ body {
   to   { opacity: 1; transform: translateY(0);    }
 }
 
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 .animate-breathe-glow { animation: breathe-glow 5s ease-in-out infinite; }
 .animate-breathe      { animation: breathe-slow 4s ease-in-out infinite; }
 .animate-float        { animation: float-gentle 3s ease-in-out infinite; }
@@ -60,7 +71,13 @@ body {
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border: 1px solid rgba(255, 255, 255, 0.82);
-  box-shadow: 0 4px 28px rgba(186, 230, 253, 0.18);
+  box-shadow: 0 4px 28px rgba(91, 108, 255, 0.08);
+}
+
+.dark .glass {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 28px rgba(0, 0, 0, 0.3);
 }
 
 .glass-strong {
@@ -68,12 +85,17 @@ body {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.9);
-  box-shadow: 0 8px 40px rgba(186, 230, 253, 0.22);
+  box-shadow: 0 8px 40px rgba(91, 108, 255, 0.10);
 }
 
-/* ── Scrollbar softening ────────────────────────────────────── */
+.dark .glass-strong {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ── Scrollbar ──────────────────────────────────────────────── */
 
 ::-webkit-scrollbar       { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(186, 230, 253, 0.5); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(125, 211, 252, 0.7); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--muted); }
