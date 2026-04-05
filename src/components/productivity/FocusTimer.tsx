@@ -372,8 +372,8 @@ export function FocusTimer({ fullscreen = false, onClose }: FocusTimerProps) {
 
   return (
     <div className="glass rounded-2xl py-4 px-3">
-      <p className="text-xs font-semibold text-sky-400 uppercase tracking-widest mb-3 text-center">
-        Focus timer
+      <p className="text-sm font-semibold text-gray-900 mb-3 text-center">
+        Focus Timer
       </p>
       <CompactTimer onExpand={() => setExpanded(true)} />
     </div>

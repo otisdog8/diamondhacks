@@ -37,7 +37,7 @@ export function TinyTasks() {
 
   return (
     <div className="glass rounded-2xl p-5">
-      <p className="text-xs font-semibold text-sky-400 uppercase tracking-widest mb-3">Tiny tasks</p>
+      <p className="text-sm font-semibold text-gray-900 mb-3">Tiny Tasks</p>
 
       {/* Input */}
       <div className="flex gap-2 mb-4">
@@ -48,35 +48,35 @@ export function TinyTasks() {
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && addTask()}
           placeholder="Add a task… (15m)"
-          className="flex-1 text-sm px-3 py-2 rounded-xl border border-sky-100 bg-white/60 text-sky-700 placeholder-sky-200 focus:outline-none focus:ring-2 focus:ring-sky-200 transition"
+          className="flex-1 text-sm px-3 py-2 rounded-xl border border-gray-200 bg-white/80 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-sky-200 transition"
         />
         <button
           onClick={addTask}
           disabled={!input.trim()}
-          className="px-3 py-2 text-sm rounded-xl bg-sky-100 text-sky-600 font-medium hover:bg-sky-200 disabled:opacity-30 transition"
+          className="px-3 py-2 text-sm rounded-xl bg-[#1B4457]/10 text-[#1B4457] font-semibold hover:bg-[#1B4457]/20 disabled:opacity-30 transition"
         >
           Add
         </button>
       </div>
 
       {active.length === 0 && done.length === 0 && (
-        <p className="text-sm text-sky-200 text-center py-2">Nothing yet — add something quick</p>
+        <p className="text-sm text-gray-400 text-center py-2">Nothing yet — add something quick</p>
       )}
 
       <div className="space-y-1.5">
         {active.map((task) => (
-          <div key={task.id} className="flex items-center gap-2.5 group px-1 py-1 rounded-xl hover:bg-sky-50/60 transition">
+          <div key={task.id} className="flex items-center gap-2.5 group px-1 py-1 rounded-xl hover:bg-white/60 transition">
             <button
               onClick={() => toggleTask(task.id)}
-              className="w-4 h-4 rounded border border-sky-200 shrink-0 hover:border-sky-400 transition flex items-center justify-center bg-white/60"
+              className="w-4 h-4 rounded border border-gray-300 shrink-0 hover:border-[#1B4457] transition flex items-center justify-center bg-white/80"
             />
-            <span className="flex-1 text-sm text-sky-700">{task.text}</span>
+            <span className="flex-1 text-sm text-gray-700">{task.text}</span>
             {task.estimateMins && (
-              <span className="text-xs text-sky-300 shrink-0">{task.estimateMins}m</span>
+              <span className="text-xs text-gray-400 shrink-0">{task.estimateMins}m</span>
             )}
             <button
               onClick={() => removeTask(task.id)}
-              className="opacity-0 group-hover:opacity-100 text-sky-200 hover:text-sky-400 text-xs transition"
+              className="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-gray-500 text-xs transition"
             >
               ✕
             </button>
@@ -85,7 +85,7 @@ export function TinyTasks() {
       </div>
 
       {done.length > 0 && (
-        <div className="mt-3 pt-3 border-t border-sky-100/60 space-y-1.5">
+        <div className="mt-3 pt-3 border-t border-gray-200/60 space-y-1.5">
           {done.map((task) => (
             <div key={task.id} className="flex items-center gap-2.5 group px-1 py-1 rounded-xl">
               <button
@@ -94,10 +94,10 @@ export function TinyTasks() {
               >
                 <span className="text-white text-[9px] leading-none">✓</span>
               </button>
-              <span className="flex-1 text-sm text-sky-200 line-through">{task.text}</span>
+              <span className="flex-1 text-sm text-gray-400 line-through">{task.text}</span>
               <button
                 onClick={() => removeTask(task.id)}
-                className="opacity-0 group-hover:opacity-100 text-sky-200 hover:text-sky-400 text-xs transition"
+                className="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-gray-500 text-xs transition"
               >
                 ✕
               </button>
@@ -105,7 +105,7 @@ export function TinyTasks() {
           ))}
           <button
             onClick={() => setTasks((p) => p.filter((t) => !t.done))}
-            className="text-xs text-sky-300 hover:text-sky-500 mt-1 transition"
+            className="text-xs text-gray-400 hover:text-gray-600 mt-1 transition"
           >
             Clear completed
           </button>
