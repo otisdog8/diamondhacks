@@ -1,176 +1,174 @@
 "use client";
 
 import { useState } from "react";
-import { Card } from "@/components/ui/Card";
-import { Toggle } from "@/components/ui/Toggle";
-import { Button } from "@/components/ui/Button";
-import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { useToast } from "@/components/ui/Toast";
+import { TodoPanel } from "@/components/extensions/TodoPanel";
+import { ReminderSetup } from "@/components/extensions/ReminderSetup";
+import { StudyPanel } from "@/components/extensions/StudyPanel";
+import { LecturePanel } from "@/components/extensions/LecturePanel";
+import { AssignmentPanel } from "@/components/extensions/AssignmentPanel";
 import type { ClassInfo } from "@/hooks/useClasses";
 
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const TABS = ["Assignments", "Todos", "Reminders", "Study", "Lectures"] as const;
+type Tab = (typeof TABS)[number];
+
+const TAB_COLORS: Record<Tab, string> = {
+  Assignments: "#FFB020",
+  Todos:       "#5B6CFF",
+  Reminders:   "#FF5C5C",
+  Study:       "#45D483",
+  Lectures:    "#9C8CFF",
+};
 
 interface ClassCardProps {
   classInfo: ClassInfo;
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
-  hasConflict?: boolean;
 }
 
-export function ClassCard({
-  classInfo,
-  onToggle,
-  onDelete,
-  hasConflict = false,
-}: ClassCardProps) {
-  const showToast = useToast();
-  const [toggling, setToggling] = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-
-  const handleToggle = async () => {
-    if (toggling) return;
-    setToggling(true);
-    try {
-      await onToggle(classInfo.id);
-      showToast(
-        classInfo.enabled
-          ? `${classInfo.code} disabled for export`
-          : `${classInfo.code} enabled for export`,
-        classInfo.enabled ? "info" : "success"
-      );
-    } catch {
-      showToast(`Failed to update ${classInfo.code}`, "error");
-    } finally {
-      setToggling(false);
-    }
-  };
-
-  const handleDelete = async () => {
-    setDeleting(true);
-    try {
-      await onDelete(classInfo.id);
-      showToast(`${classInfo.code} removed`, "info");
-    } catch {
-      showToast(`Failed to remove ${classInfo.code}`, "error");
-      setDeleting(false);
-    }
-    setConfirmDelete(false);
-  };
+export function ClassCard({ classInfo, onToggle, onDelete }: ClassCardProps) {
+  const [expanded, setExpanded] = useState(false);
+  const [activeTab, setActiveTab] = useState<Tab>("Assignments");
 
   return (
-    <>
-      <Card
-        className={`transition-opacity ${
-          !classInfo.enabled ? "opacity-60" : ""
-        } ${hasConflict ? "ring-2 ring-red-400 dark:ring-red-500" : ""}`}
-      >
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-3 flex-wrap">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white truncate">
+    <div
+      style={{
+        background: "#fff",
+        border: "1px solid var(--border)",
+        borderRadius: 16,
+        overflow: "hidden",
+        transition: "box-shadow 0.2s, opacity 0.2s",
+        opacity: classInfo.enabled ? 1 : 0.55,
+        boxShadow: "0 1px 4px rgba(31,31,46,0.06)",
+      }}
+      onMouseEnter={(e) => (e.currentTarget.style.boxShadow = "0 4px 20px rgba(91,108,255,0.10)")}
+      onMouseLeave={(e) => (e.currentTarget.style.boxShadow = "0 1px 4px rgba(31,31,46,0.06)")}
+    >
+      {/* Card header */}
+      <div style={{ padding: "20px 24px" }}>
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 16 }}>
+          <div style={{
+            width: 10, height: 10, borderRadius: "50%",
+            background: classInfo.enabled ? "var(--indigo)" : "var(--muted)",
+            marginTop: 7, flexShrink: 0, transition: "background 0.2s",
+          }} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+              <h3 style={{ fontSize: 17, fontWeight: 700, color: "var(--dark)", letterSpacing: "-0.3px" }}>
                 {classInfo.code}
               </h3>
-              <Toggle
-                enabled={classInfo.enabled}
-                onChange={handleToggle}
-                disabled={toggling}
-              />
-              {hasConflict && (
-                <span className="inline-flex items-center gap-1 text-xs font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30 px-2 py-0.5 rounded-full">
-                  ⚠ Time conflict
+              <button
+                onClick={() => onToggle(classInfo.id)}
+                style={{
+                  width: 36, height: 20, borderRadius: 999, border: "none",
+                  background: classInfo.enabled ? "var(--indigo)" : "#d1d5e8",
+                  position: "relative", cursor: "pointer", transition: "background 0.2s", flexShrink: 0,
+                }}
+              >
+                <span style={{
+                  position: "absolute", top: 3,
+                  left: classInfo.enabled ? 18 : 3,
+                  width: 14, height: 14, borderRadius: "50%",
+                  background: "#fff", transition: "left 0.2s",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                }} />
+              </button>
+            </div>
+            <p style={{ fontSize: 13, color: "var(--muted)", marginTop: 2 }}>{classInfo.name}</p>
+            <div style={{ display: "flex", gap: 16, marginTop: 4, flexWrap: "wrap" }}>
+              {classInfo.instructor && (
+                <span style={{ fontSize: 12, color: "var(--muted)" }}>{classInfo.instructor}</span>
+              )}
+              {classInfo.term && (
+                <span style={{
+                  fontSize: 11, fontWeight: 600, color: "var(--indigo)",
+                  background: "var(--primary-light)", padding: "2px 8px", borderRadius: 999,
+                }}>
+                  {classInfo.term}
                 </span>
               )}
             </div>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-0.5">
-              {classInfo.name}
-            </p>
-            {classInfo.instructor && (
-              <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
-                Instructor: {classInfo.instructor}
-              </p>
-            )}
-            {classInfo.term && (
-              <p className="text-xs text-gray-400 dark:text-gray-600">
-                {classInfo.term}
-              </p>
-            )}
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setConfirmDelete(true)}
-            disabled={deleting}
-            className="text-red-500 hover:text-red-700 shrink-0"
-          >
-            {deleting ? "Removing…" : "Remove"}
-          </Button>
+
+          <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+            <button
+              onClick={() => setExpanded((e) => !e)}
+              style={{
+                padding: "6px 14px", borderRadius: 8, fontSize: 12, fontWeight: 600,
+                color: "var(--indigo)", background: "var(--primary-light)", border: "none",
+                cursor: "pointer", transition: "background 0.15s",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "#d8dbff")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "var(--primary-light)")}
+            >
+              {expanded ? "Less ▲" : "More ▼"}
+            </button>
+            <button
+              onClick={() => onDelete(classInfo.id)}
+              style={{
+                padding: "6px 14px", borderRadius: 8, fontSize: 12, fontWeight: 600,
+                color: "var(--soft-red)", background: "#fff0f0", border: "none",
+                cursor: "pointer", transition: "background 0.15s",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "#ffe0e0")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "#fff0f0")}
+            >
+              Remove
+            </button>
+          </div>
         </div>
 
+        {/* Schedule */}
         {classInfo.schedule.length > 0 && (
-          <div className="mt-3 space-y-1">
-            <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+          <div style={{ marginTop: 14 }}>
+            <p style={{ fontSize: 10, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>
               Schedule
             </p>
-            {classInfo.schedule.map((s, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300"
-              >
-                <span className="font-medium w-8">{DAY_NAMES[s.dayOfWeek]}</span>
-                <span>
-                  {s.startTime} – {s.endTime}
-                </span>
-                {s.location && (
-                  <span className="text-gray-400">@ {s.location}</span>
-                )}
-                <span className="text-xs px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
-                  {s.type === "office_hours" ? "OH" : s.type}
-                </span>
-                {s.host && (
-                  <span className="text-xs text-teal-600 dark:text-teal-400">
-                    {s.host}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+              {classInfo.schedule.map((s, i) => (
+                <div key={i} style={{
+                  display: "flex", alignItems: "center", gap: 6, fontSize: 12,
+                  background: "var(--bg-subtle)", borderRadius: 8, padding: "4px 10px", color: "var(--dark)",
+                }}>
+                  <span style={{ fontWeight: 700, color: "var(--indigo)", minWidth: 28 }}>{DAY_NAMES[s.dayOfWeek]}</span>
+                  <span>{s.startTime}–{s.endTime}</span>
+                  {s.location && <span style={{ color: "var(--muted)" }}>@ {s.location}</span>}
+                  <span style={{ fontSize: 10, fontWeight: 600, color: "var(--mint)", background: "#edfbf3", padding: "1px 6px", borderRadius: 999 }}>
+                    {s.type === "office_hours" ? "OH" : s.type}
                   </span>
-                )}
-              </div>
-            ))}
+                  {s.host && (
+                    <span style={{ fontSize: 10, fontWeight: 600, color: "#0d9488" }}>{s.host}</span>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
+        {/* External links */}
         {classInfo.externalLinks.length > 0 && (
-          <div className="mt-3">
-            <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+          <div style={{ marginTop: 12 }}>
+            <p style={{ fontSize: 10, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>
               External Links
             </p>
-            <div className="mt-1 flex flex-wrap gap-1">
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
               {classInfo.externalLinks.slice(0, 5).map((link, i) => {
                 let isUrl = false;
                 let label = link;
-                try {
-                  const u = new URL(link);
-                  isUrl = true;
-                  label = u.hostname;
-                } catch {
-                  // Not a URL — just display the text as-is
-                }
+                try { const u = new URL(link); isUrl = true; label = u.hostname; } catch { /* not a URL */ }
+                const style = {
+                  fontSize: 11, color: "var(--indigo)", background: "var(--primary-light)",
+                  padding: "2px 8px", borderRadius: 999, textDecoration: "none" as const,
+                  maxWidth: 180, overflow: "hidden" as const, textOverflow: "ellipsis" as const, whiteSpace: "nowrap" as const,
+                };
                 return isUrl ? (
-                  <a
-                    key={i}
-                    href={link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs text-blue-600 hover:underline truncate max-w-[200px]"
-                  >
-                    {label}
-                  </a>
+                  <a key={i} href={link} target="_blank" rel="noopener noreferrer" style={style}>{label}</a>
                 ) : (
-                  <span key={i} className="text-xs text-gray-500 truncate max-w-[200px]">
-                    {label}
-                  </span>
+                  <span key={i} style={style}>{label}</span>
                 );
               })}
               {classInfo.externalLinks.length > 5 && (
-                <span className="text-xs text-gray-400">
+                <span style={{ fontSize: 11, color: "var(--muted)", padding: "2px 4px" }}>
                   +{classInfo.externalLinks.length - 5} more
                 </span>
               )}
@@ -179,21 +177,60 @@ export function ClassCard({
         )}
 
         {classInfo.lastScrapedAt && (
-          <p className="mt-2 text-xs text-gray-400">
+          <p style={{ marginTop: 10, fontSize: 11, color: "#b0b3c8" }}>
             Last scraped: {new Date(classInfo.lastScrapedAt).toLocaleString()}
           </p>
         )}
-      </Card>
+      </div>
 
-      {confirmDelete && (
-        <ConfirmDialog
-          title="Remove class?"
-          message={`Remove ${classInfo.code} — ${classInfo.name}? This cannot be undone.`}
-          confirmLabel="Remove"
-          onConfirm={handleDelete}
-          onCancel={() => setConfirmDelete(false)}
-        />
+      {/* Expandable panels */}
+      {expanded && (
+        <div style={{ borderTop: "1px solid var(--border)", background: "var(--bg)" }}>
+          {/* Tab bar */}
+          <div style={{ display: "flex", gap: 2, padding: "12px 24px 0", borderBottom: "1px solid var(--border)", overflowX: "auto" }}>
+            {TABS.map((tab) => {
+              const active = activeTab === tab;
+              return (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  style={{
+                    padding: "8px 16px", borderRadius: "8px 8px 0 0", fontSize: 12,
+                    fontWeight: active ? 700 : 500,
+                    color: active ? TAB_COLORS[tab] : "var(--muted)",
+                    background: active ? "#fff" : "transparent",
+                    border: "none",
+                    borderBottom: active ? `2px solid ${TAB_COLORS[tab]}` : "2px solid transparent",
+                    cursor: "pointer", transition: "all 0.15s",
+                    fontFamily: "'Poppins', sans-serif", whiteSpace: "nowrap",
+                  }}
+                >
+                  {tab}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Panel */}
+          <div style={{ padding: 24 }}>
+            {activeTab === "Assignments" && (
+              <AssignmentPanel classId={classInfo.id} className={classInfo.code} canvasUrl="https://canvas.ucsd.edu" />
+            )}
+            {activeTab === "Todos" && (
+              <TodoPanel classId={classInfo.id} className={classInfo.code} canvasUrl="https://canvas.ucsd.edu" />
+            )}
+            {activeTab === "Reminders" && (
+              <ReminderSetup classId={classInfo.id} className={classInfo.code} />
+            )}
+            {activeTab === "Study" && (
+              <StudyPanel classId={classInfo.id} className={classInfo.code} />
+            )}
+            {activeTab === "Lectures" && (
+              <LecturePanel classId={classInfo.id} className={classInfo.code} />
+            )}
+          </div>
+        </div>
       )}
-    </>
+    </div>
   );
 }

@@ -254,7 +254,6 @@ export function ClassList() {
               classInfo={cls}
               onToggle={toggleClass}
               onDelete={deleteClass}
-              hasConflict={conflictIds.has(cls.id)}
             />
           ))}
         </div>
