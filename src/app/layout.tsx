@@ -28,7 +28,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body
-        className="min-h-full flex flex-col bg-[#F8F9FD] dark:bg-[#1F1F2E] dark:text-gray-100"
+        className="min-h-full flex flex-col bg-[#F8F9FD] dark:bg-gray-950 dark:text-gray-100"
         style={{ fontFamily: "var(--font-poppins), sans-serif" }}
       >
         <ThemeProvider>
