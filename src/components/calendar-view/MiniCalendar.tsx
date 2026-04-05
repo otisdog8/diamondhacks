@@ -62,13 +62,13 @@ export function MiniCalendar({ selectedDate, events, onSelectDate }: MiniCalenda
     <div className="select-none">
       {/* Month nav */}
       <div className="flex items-center justify-between mb-2">
-        <button onClick={prev} className="p-1 rounded hover:bg-sky-50 text-stone-500 transition-colors text-sm">
+        <button onClick={prev} className="p-1 rounded hover:bg-[#F0F1F5] dark:hover:bg-[#22263A] text-[#8F8F8F] dark:text-[#8F8F8F] transition-colors text-sm">
           ‹
         </button>
-        <span className="text-xs font-semibold text-sky-700">
+        <span className="text-xs font-semibold text-[#464646] dark:text-[#C8C8C8]">
           {MONTH_NAMES[viewMonth]} {viewYear}
         </span>
-        <button onClick={next} className="p-1 rounded hover:bg-sky-50 text-stone-500 transition-colors text-sm">
+        <button onClick={next} className="p-1 rounded hover:bg-[#F0F1F5] dark:hover:bg-[#22263A] text-[#8F8F8F] dark:text-[#8F8F8F] transition-colors text-sm">
           ›
         </button>
       </div>
@@ -76,7 +76,7 @@ export function MiniCalendar({ selectedDate, events, onSelectDate }: MiniCalenda
       {/* Day labels */}
       <div className="grid grid-cols-7 mb-1">
         {DAY_LABELS.map((l, i) => (
-          <div key={i} className="text-center text-xs text-sky-300 py-0.5 font-medium">
+          <div key={i} className="text-center text-xs text-[#8F8F8F] py-0.5 font-medium">
             {l}
           </div>
         ))}
@@ -97,15 +97,15 @@ export function MiniCalendar({ selectedDate, events, onSelectDate }: MiniCalenda
               key={idx}
               onClick={() => onSelectDate(day)}
               className={`relative text-xs w-7 h-7 mx-auto flex items-center justify-center rounded-full transition-colors
-                ${today && !selected ? "text-sky-500 font-semibold" : ""}
-                ${selected ? "bg-sky-400 text-white font-semibold" : ""}
-                ${!selected && !today && inMonth ? "text-sky-700 hover:bg-sky-50" : ""}
-                ${!inMonth ? "text-sky-200" : ""}
+                ${today && !selected ? "text-[#60CCD4] font-semibold" : ""}
+                ${selected ? "bg-[#60CCD4] text-white font-semibold" : ""}
+                ${!selected && !today && inMonth ? "text-[#464646] dark:text-[#C8C8C8] hover:bg-[#F0F1F5] dark:hover:bg-[#22263A]" : ""}
+                ${!inMonth ? "text-[#C8C8C8] dark:text-[#2E3347]" : ""}
               `}
             >
               {day.getDate()}
               {hasEvents && !selected && (
-                <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-sky-400" />
+                <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-[#60CCD4]" />
               )}
             </button>
           );

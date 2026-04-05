@@ -45,10 +45,10 @@ export function RightNowPanel({ events, hasClasses, nextDay }: RightNowPanelProp
 
   if (allDone) {
     return (
-      <div className="glass rounded-2xl p-5">
-        <p className="text-xs font-semibold text-sky-400 uppercase tracking-widest mb-1">Right now</p>
-        <p className="text-xl font-light text-sky-800">All done for today</p>
-        <p className="text-sm text-sky-300 mt-1">No more classes. Good work.</p>
+      <div className="bg-white dark:bg-[#1A1D27] border border-[#EBEBEB] dark:border-[#1E2235] rounded-xl p-5 shadow-sm">
+        <p className="text-xs font-semibold text-[#8F8F8F] uppercase tracking-widest mb-1">Right now</p>
+        <p className="text-xl font-light text-[#000000] dark:text-[#F5F6F8]">All done for today</p>
+        <p className="text-sm text-[#8F8F8F] mt-1">No more classes. Good work.</p>
       </div>
     );
   }
@@ -56,19 +56,18 @@ export function RightNowPanel({ events, hasClasses, nextDay }: RightNowPanelProp
   if (currentClass) {
     const minsLeft = Math.ceil((currentClass.endTime.getTime() - now.getTime()) / 60_000);
     return (
-      <div className="rounded-2xl p-5 border border-sky-200/50"
-           style={{ background: "linear-gradient(135deg, rgba(224,242,254,0.7) 0%, rgba(255,255,255,0.7) 100%)", backdropFilter: "blur(12px)" }}>
-        <p className="text-xs font-semibold text-sky-400 uppercase tracking-widest mb-1">Happening now</p>
-        <p className="text-xl font-semibold text-sky-700">
+      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-5">
+        <p className="text-xs font-semibold text-blue-500 uppercase tracking-widest mb-1">Happening now</p>
+        <p className="text-xl font-semibold text-[#000000] dark:text-[#F5F6F8]">
           {currentClass.code}
           {currentClass.type === "office_hours" ? " OH" : ""}
         </p>
-        <p className="text-sm text-sky-500 mt-0.5">
+        <p className="text-sm text-[#464646] dark:text-[#C8C8C8] mt-0.5">
           {currentClass.type === "office_hours" && currentClass.host
             ? currentClass.host
             : currentClass.name}
         </p>
-        <p className="text-sm text-sky-400 mt-2">
+        <p className="text-sm text-[#8F8F8F] mt-2">
           Ends in {minsLeft} min{minsLeft !== 1 ? "s" : ""}
           {currentClass.location ? ` · ${currentClass.location}` : ""}
         </p>
@@ -81,16 +80,19 @@ export function RightNowPanel({ events, hasClasses, nextDay }: RightNowPanelProp
     const first = nextDay.events[0];
     const startLabel = first.startTime.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
     return (
-      <div className="glass rounded-2xl p-5">
-        <p className="text-xs font-semibold text-sky-400 uppercase tracking-widest mb-1">Right now</p>
-        <p className="text-xl font-light text-sky-800">No classes today</p>
-        <p className="text-sm text-sky-400 mt-2">
-          Next up: <span className="font-semibold text-sky-500">{first.code}</span> {nextDay.dayName.toLowerCase() === "tomorrow" ? "tomorrow" : `on ${nextDay.dayName}`} at {startLabel}
+      <div className="bg-white dark:bg-[#1A1D27] border border-[#EBEBEB] dark:border-[#1E2235] rounded-xl p-5 shadow-sm">
+        <p className="text-xs font-semibold text-[#8F8F8F] uppercase tracking-widest mb-1">Right now</p>
+        <p className="text-xl font-light text-[#000000] dark:text-[#F5F6F8]">No classes today</p>
+        <p className="text-sm text-[#464646] dark:text-[#C8C8C8] mt-2">
+          Next up:{" "}
+          <span className="font-semibold text-blue-500">{first.code}</span>{" "}
+          {nextDay.dayName.toLowerCase() === "tomorrow" ? "tomorrow" : `on ${nextDay.dayName}`} at {startLabel}
           {first.location ? ` · ${first.location}` : ""}
         </p>
         {nextDay.events.length > 1 && (
-          <p className="text-xs text-sky-300 mt-1">
-            + {nextDay.events.length - 1} more class{nextDay.events.length - 1 !== 1 ? "es" : ""} {nextDay.dayName.toLowerCase() === "today" ? "today" : nextDay.dayName.toLowerCase()}
+          <p className="text-xs text-[#8F8F8F] mt-1">
+            + {nextDay.events.length - 1} more class{nextDay.events.length - 1 !== 1 ? "es" : ""}{" "}
+            {nextDay.dayName.toLowerCase() === "today" ? "today" : nextDay.dayName.toLowerCase()}
           </p>
         )}
       </div>
@@ -99,10 +101,10 @@ export function RightNowPanel({ events, hasClasses, nextDay }: RightNowPanelProp
 
   if (!nextClass || minsUntilNext === null) {
     return (
-      <div className="glass rounded-2xl p-5">
-        <p className="text-xs font-semibold text-sky-400 uppercase tracking-widest mb-1">Right now</p>
-        <p className="text-xl font-light text-sky-800">No classes today</p>
-        <p className="text-sm text-sky-300 mt-1">Enjoy your free day.</p>
+      <div className="bg-white dark:bg-[#1A1D27] border border-[#EBEBEB] dark:border-[#1E2235] rounded-xl p-5 shadow-sm">
+        <p className="text-xs font-semibold text-[#8F8F8F] uppercase tracking-widest mb-1">Right now</p>
+        <p className="text-xl font-light text-[#000000] dark:text-[#F5F6F8]">No classes today</p>
+        <p className="text-sm text-[#8F8F8F] mt-1">Enjoy your free day.</p>
       </div>
     );
   }
@@ -111,31 +113,31 @@ export function RightNowPanel({ events, hasClasses, nextDay }: RightNowPanelProp
   const suggestions = getQuickTasks(minsUntilNext);
 
   return (
-    <div className="glass rounded-2xl p-5">
-      <p className="text-xs font-semibold text-sky-400 uppercase tracking-widest mb-2">Right now</p>
-      <p className="text-xl font-light text-sky-800">
+    <div className="bg-white dark:bg-[#1A1D27] border border-[#EBEBEB] dark:border-[#1E2235] rounded-xl p-5 shadow-sm">
+      <p className="text-xs font-semibold text-[#8F8F8F] uppercase tracking-widest mb-2">Right now</p>
+      <p className="text-xl font-light text-[#000000] dark:text-[#F5F6F8]">
         {Math.floor(minsUntilNext)} min until{" "}
-        <span className="font-semibold text-sky-500">{nextClass.code}</span>
+        <span className="font-semibold text-blue-500">{nextClass.code}</span>
       </p>
       {nextClass.location && (
-        <p className="text-sm text-sky-300 mt-0.5">{nextClass.location}</p>
+        <p className="text-sm text-[#8F8F8F] mt-0.5">{nextClass.location}</p>
       )}
 
       <div className="mt-4">
         {hasTime ? (
-          <div className="flex items-start gap-3 bg-sky-50/60 rounded-xl px-4 py-3 border border-sky-100/60">
-            <span className="text-sky-400 mt-0.5">◎</span>
+          <div className="flex items-start gap-3 bg-[#F0F1F5] dark:bg-[#22263A] rounded-lg px-4 py-3 border border-[#E2E4EC] dark:border-[#2E3347]">
+            <span className="text-blue-500 mt-0.5">◎</span>
             <div>
-              <p className="text-sm font-medium text-sky-700">You have time for a focus session</p>
-              <p className="text-xs text-sky-400 mt-0.5">Start a 20-minute timer to make use of this break.</p>
+              <p className="text-sm font-medium text-[#464646] dark:text-[#C8C8C8]">You have time for a focus session</p>
+              <p className="text-xs text-[#8F8F8F] mt-0.5">Start a 20-minute timer to make use of this break.</p>
             </div>
           </div>
         ) : (
           <div className="space-y-2">
-            <p className="text-xs font-medium text-sky-300 mb-2">Quick things you could do:</p>
+            <p className="text-xs font-medium text-[#8F8F8F] mb-2">Quick things you could do:</p>
             {suggestions.map((task) => (
-              <div key={task} className="flex items-center gap-2.5 text-sm text-sky-600">
-                <span className="w-1.5 h-1.5 rounded-full bg-sky-300 shrink-0" />
+              <div key={task} className="flex items-center gap-2.5 text-sm text-[#464646] dark:text-[#C8C8C8]">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#60CCD4] shrink-0" />
                 {task}
               </div>
             ))}

@@ -57,11 +57,11 @@ export function CalendarMonthView({
   return (
     <div className="flex flex-col h-full select-none">
       {/* Day headers */}
-      <div className="grid grid-cols-7 border-b border-sky-100/50">
+      <div className="grid grid-cols-7 border-b border-sky-100/50 dark:border-[#1E2235]">
         {WEEK_DAYS.map((d) => (
           <div
             key={d}
-            className="py-2 text-center text-xs font-semibold text-sky-400 uppercase tracking-wider"
+            className="py-2 text-center text-xs font-semibold text-sky-400 dark:text-[#60CCD4]/70 uppercase tracking-wider"
           >
             {d}
           </div>
@@ -83,9 +83,9 @@ export function CalendarMonthView({
           return (
             <div
               key={idx}
-              className={`border-b border-r border-sky-100/50 p-2 min-h-[100px] flex flex-col gap-1
-                ${!inMonth ? "bg-sky-50/40" : "bg-white"}
-                hover:bg-sky-50/50 transition-colors cursor-pointer`}
+              className={`border-b border-r border-sky-100/50 dark:border-[#1E2235] p-2 min-h-[100px] flex flex-col gap-1
+                ${!inMonth ? "bg-sky-50/40 dark:bg-[#0D1014]" : "bg-white dark:bg-[#0F1117]"}
+                hover:bg-sky-50/50 dark:hover:bg-[#161820] transition-colors cursor-pointer`}
               onClick={() => onNavigateToDate(day)}
             >
               {/* Date number */}
@@ -95,8 +95,8 @@ export function CalendarMonthView({
                     ${today
                       ? "bg-sky-400 text-white"
                       : inMonth
-                      ? "text-sky-700"
-                      : "text-sky-300"
+                      ? "text-[#000000] dark:text-[#F5F6F8]"
+                      : "text-[#C8C8C8] dark:text-[#464646]"
                     }`}
                 >
                   {day.getDate()}
@@ -118,7 +118,7 @@ export function CalendarMonthView({
                   />
                 ))}
                 {overflow > 0 && (
-                  <span className="text-xs text-sky-400 px-1">
+                  <span className="text-xs text-sky-400 dark:text-[#60CCD4]/70 px-1">
                     +{overflow} more
                   </span>
                 )}

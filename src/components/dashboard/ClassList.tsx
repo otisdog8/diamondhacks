@@ -120,7 +120,7 @@ export function ClassList() {
         {[1, 2, 3].map((i) => (
           <div
             key={i}
-            className="h-32 rounded-xl bg-sky-50/50 animate-pulse"
+            className="h-32 rounded-xl bg-[#F0F1F5] dark:bg-[#1A1D27] animate-pulse"
           />
         ))}
       </div>
@@ -129,8 +129,8 @@ export function ClassList() {
 
   if (error) {
     return (
-      <div className="rounded-xl bg-red-50 p-6 text-center">
-        <p className="text-red-600">{error}</p>
+      <div className="rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-6 text-center">
+        <p className="text-red-700 dark:text-red-400 text-sm">{error}</p>
       </div>
     );
   }
@@ -146,11 +146,11 @@ export function ClassList() {
     <div className="space-y-4">
       {/* Stats + conflict warning */}
       <div className="flex flex-wrap items-center gap-4">
-        <p className="text-sm text-sky-500">
+        <p className="text-sm text-[#8F8F8F]">
           {enabledCount} of {classes.length} classes enabled for calendar export
         </p>
         {conflictCount > 0 && (
-          <span className="inline-flex items-center gap-1 text-xs font-medium text-red-600 bg-red-50 px-2 py-1 rounded-full">
+          <span className="inline-flex items-center gap-1 text-xs font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded-full border border-red-200 dark:border-red-800">
             ⚠ {conflictCount} class{conflictCount !== 1 ? "es" : ""} with time conflicts
           </span>
         )}
@@ -160,7 +160,7 @@ export function ClassList() {
       <div className="flex flex-wrap items-center gap-3">
         {/* Search */}
         <div className="relative flex-1 min-w-[200px]">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sky-300 text-sm pointer-events-none">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8F8F8F] text-sm pointer-events-none">
             ⌕
           </span>
           <input
@@ -168,12 +168,12 @@ export function ClassList() {
             placeholder="Search classes..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-8 pr-3 py-2 text-sm rounded-lg border border-sky-200 bg-white text-sky-900 placeholder-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-400"
+            className="w-full pl-8 pr-3 py-2 text-sm rounded-lg border border-[#D3D3D3] dark:border-[#2E3347] bg-white dark:bg-[#1A1D27] text-[#000000] dark:text-[#F5F6F8] placeholder-[#C8C8C8] dark:placeholder-[#464646] focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
         {/* Filter tabs */}
-        <div className="flex rounded-lg border border-sky-200 overflow-hidden text-sm">
+        <div className="flex rounded-lg border border-[#D3D3D3] dark:border-[#2E3347] overflow-hidden text-sm">
           {(["all", "enabled", "disabled"] as FilterTab[]).map((tab) => (
             <button
               key={tab}
@@ -181,8 +181,8 @@ export function ClassList() {
               className={`px-3 py-1.5 font-medium capitalize transition-colors
                 ${
                   filter === tab
-                    ? "bg-sky-500 text-white"
-                    : "bg-white text-sky-500 hover:bg-sky-50"
+                    ? "bg-blue-500 text-white"
+                    : "bg-white dark:bg-[#1A1D27] text-[#464646] dark:text-[#C8C8C8] hover:bg-[#F0F1F5] dark:hover:bg-[#22263A]"
                 }`}
             >
               {tab}
@@ -191,29 +191,21 @@ export function ClassList() {
         </div>
 
         {/* View toggle */}
-        <div className="flex rounded-lg border border-sky-200 overflow-hidden text-sm">
-          <button
-            onClick={() => setView("list")}
-            className={`px-3 py-1.5 font-medium transition-colors
-              ${
-                view === "list"
-                  ? "bg-sky-500 text-white"
-                  : "bg-white text-sky-500 hover:bg-sky-50"
-              }`}
-          >
-            List
-          </button>
-          <button
-            onClick={() => setView("week")}
-            className={`px-3 py-1.5 font-medium transition-colors
-              ${
-                view === "week"
-                  ? "bg-sky-500 text-white"
-                  : "bg-white text-sky-500 hover:bg-sky-50"
-              }`}
-          >
-            Week
-          </button>
+        <div className="flex rounded-lg border border-[#D3D3D3] dark:border-[#2E3347] overflow-hidden text-sm">
+          {(["list", "week"] as ViewMode[]).map((v) => (
+            <button
+              key={v}
+              onClick={() => setView(v)}
+              className={`px-3 py-1.5 font-medium capitalize transition-colors
+                ${
+                  view === v
+                    ? "bg-blue-500 text-white"
+                    : "bg-white dark:bg-[#1A1D27] text-[#464646] dark:text-[#C8C8C8] hover:bg-[#F0F1F5] dark:hover:bg-[#22263A]"
+                }`}
+            >
+              {v === "list" ? "List" : "Week"}
+            </button>
+          ))}
         </div>
 
         {/* Bulk actions */}
@@ -241,8 +233,8 @@ export function ClassList() {
       {view === "week" ? (
         <WeekView classes={filtered} />
       ) : filtered.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-sky-200 p-8 text-center">
-          <p className="text-sky-400 text-sm">
+        <div className="rounded-xl border border-dashed border-[#D3D3D3] dark:border-[#2E3347] p-8 text-center">
+          <p className="text-[#8F8F8F] text-sm">
             No classes match your search
           </p>
         </div>

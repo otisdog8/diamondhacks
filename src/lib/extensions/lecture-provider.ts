@@ -40,7 +40,7 @@ async function tlFetch(path: string, options?: RequestInit) {
 import { callAI } from "@/lib/ai/openrouter";
 const callClaude = callAI;
 
-// Ensure a TwelveLabs index exists for inbtwn (one-time setup per API key)
+// Ensure a TwelveLabs index exists for inBtwn (one-time setup per API key)
 async function ensureIndex(): Promise<string> {
   // Check for existing index
   const existing = await tlFetch("/indexes?page=1&page_limit=10");

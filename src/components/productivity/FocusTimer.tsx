@@ -11,12 +11,12 @@ type Phase = "work" | "break";
 type State = "idle" | "running" | "paused" | "done";
 
 // Full-screen ring dimensions
-const FULL_R  = 100;
-const FULL_C  = 2 * Math.PI * FULL_R;  // ≈ 628.3
+const FULL_R = 100;
+const FULL_C = 2 * Math.PI * FULL_R; // ≈ 628.3
 
 // Compact ring dimensions
-const COMP_R  = 36;
-const COMP_C  = 2 * Math.PI * COMP_R;  // ≈ 226.2
+const COMP_R = 36;
+const COMP_C = 2 * Math.PI * COMP_R; // ≈ 226.2
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -27,24 +27,22 @@ function fmt(secs: number) {
 
 const PHASE_CONFIG = {
   work: {
-    bg:           "from-sky-100 via-white to-blue-50",
-    track:        "#BAE6FD",   // sky-200
-    ring:         "#38BDF8",   // sky-400
-    glow:         "rgba(186,230,253,0.55)",
-    label:        "Focus Time",
-    sublabel:     "Deep work session",
-    breakPrompt:  "Well done. Take a breath.",
-    buttonBg:     "rgba(56,189,248,0.85)",
+    track:       "#CFFAFE",   // teal-100
+    ring:        "#60CCD4",   // brand teal (secondary accent)
+    glow:        "rgba(96,204,212,0.18)",
+    label:       "Focus Time",
+    sublabel:    "Deep focus session",
+    breakPrompt: "Well done. Take a breath.",
+    buttonBg:    "#1A7F8C",   // dark teal — WCAG AA on white/dark
   },
   break: {
-    bg:           "from-cyan-50 via-white to-teal-50",
-    track:        "#A5F3FC",   // cyan-200
-    ring:         "#06B6D4",   // cyan-500
-    glow:         "rgba(165,243,252,0.55)",
-    label:        "Take a Breath",
-    sublabel:     "Short break",
-    breakPrompt:  "Break over. Ready to focus?",
-    buttonBg:     "rgba(6,182,212,0.85)",
+    track:       "#CFFAFE",   // teal-100
+    ring:        "#60CCD4",   // brand teal
+    glow:        "rgba(96,204,212,0.18)",
+    label:       "Take a Breath",
+    sublabel:    "Short break",
+    breakPrompt: "Break over. Ready to focus?",
+    buttonBg:    "#1A7F8C",
   },
 };
 
@@ -57,7 +55,7 @@ function useTimer() {
   const [sessions, setSessions] = useState(0);
 
   const totalTime = phase === "work" ? WORK_SECS : BREAK_SECS;
-  const progress  = timeLeft / totalTime;   // 1 → 0 as timer runs
+  const progress  = timeLeft / totalTime;
   const cfg       = PHASE_CONFIG[phase];
 
   useEffect(() => {
@@ -97,21 +95,24 @@ function FullTimer({ onClose }: { onClose?: () => void }) {
   const t = useTimer();
   const { phase, timerState, timeLeft, sessions, progress, cfg } = t;
 
-  // dashoffset: 0 = full ring, FULL_C = empty ring
   const dashOffset = FULL_C * (1 - progress);
   const isDone     = timerState === "done";
   const isRunning  = timerState === "running";
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-br ${cfg.bg} transition-all duration-1000`}
+      className={`fixed inset-0 z-50 flex flex-col items-center justify-center transition-all duration-1000
+        ${phase === "work"
+          ? "bg-gradient-to-br from-slate-50 via-white to-cyan-50 dark:from-[#0F1117] dark:via-[#111318] dark:to-[#0D1E20]"
+          : "bg-gradient-to-br from-slate-50 via-white to-cyan-50/80 dark:from-[#0F1117] dark:via-[#111318] dark:to-[#0D1A1C]"
+        }`}
     >
       {/* Top bar */}
       <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-6 py-4">
         {onClose && (
           <button
             onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-full bg-white/50 text-sky-500 hover:bg-white/70 transition text-sm"
+            className="w-8 h-8 flex items-center justify-center rounded-full bg-white/80 dark:bg-[#1A1D27]/80 border border-[#D3D3D3]/60 dark:border-[#2E3347]/60 text-[#464646] dark:text-[#C8C8C8] hover:bg-white dark:hover:bg-[#22263A] hover:text-[#000000] dark:hover:text-[#F5F6F8] transition text-sm font-medium"
             aria-label="Back"
           >
             ←
@@ -123,12 +124,13 @@ function FullTimer({ onClose }: { onClose?: () => void }) {
           {Array.from({ length: 4 }).map((_, i) => (
             <span
               key={i}
-              className={`w-2 h-2 rounded-full transition-all duration-300
-                ${i < sessions % 4 ? "bg-sky-400" : "bg-sky-200"}`}
+              className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                i < sessions % 4 ? "bg-[#60CCD4]" : "bg-[#D3D3D3] dark:bg-[#2E3347]"
+              }`}
             />
           ))}
           {sessions > 0 && (
-            <span className="text-xs text-sky-400 ml-1 font-medium">
+            <span className="text-xs text-[#464646] dark:text-[#C8C8C8] ml-1 font-medium">
               {sessions} done
             </span>
           )}
@@ -136,7 +138,7 @@ function FullTimer({ onClose }: { onClose?: () => void }) {
       </div>
 
       {/* Phase label */}
-      <p className="text-xs font-semibold tracking-[0.2em] uppercase text-sky-400 mb-10 animate-fade-up">
+      <p className="text-xs font-semibold tracking-[0.2em] uppercase text-[#464646] dark:text-[#8F8F8F] mb-10 animate-fade-up">
         {phase === "work" ? "Focus Session" : "Short Break"}
       </p>
 
@@ -159,15 +161,13 @@ function FullTimer({ onClose }: { onClose?: () => void }) {
           className="relative"
           style={{ filter: `drop-shadow(0 0 12px ${cfg.glow})` }}
         >
-          {/* Track */}
           <circle
             cx={110} cy={110} r={FULL_R}
             fill="none"
             stroke={cfg.track}
             strokeWidth={3}
-            strokeOpacity={0.5}
+            strokeOpacity={1}
           />
-          {/* Progress — rotated so it starts at 12 o'clock */}
           <circle
             cx={110} cy={110} r={FULL_R}
             fill="none"
@@ -184,12 +184,11 @@ function FullTimer({ onClose }: { onClose?: () => void }) {
         {/* Center text */}
         <div className="absolute flex flex-col items-center gap-1 select-none">
           <span
-            className="text-5xl font-extralight tabular-nums tracking-tight"
-            style={{ color: "#0C4A6E" }}
+            className="text-5xl font-extralight tabular-nums tracking-tight text-[#000000] dark:text-[#F5F6F8]"
           >
             {fmt(timeLeft)}
           </span>
-          <span className="text-xs text-sky-400 font-medium tracking-widest uppercase">
+          <span className="text-xs text-[#464646] dark:text-[#8F8F8F] font-medium tracking-widest uppercase">
             {cfg.label}
           </span>
         </div>
@@ -198,20 +197,20 @@ function FullTimer({ onClose }: { onClose?: () => void }) {
       {/* Done prompt */}
       {isDone && (
         <div className="mt-10 flex flex-col items-center gap-4 animate-fade-up">
-          <p className="text-sm text-slate-500 font-medium">{cfg.breakPrompt}</p>
+          <p className="text-sm text-[#464646] dark:text-[#C8C8C8] font-medium">{cfg.breakPrompt}</p>
           <div className="flex gap-3">
             {phase === "work" ? (
               <>
                 <button
                   onClick={t.startBreak}
-                  className="px-6 py-2.5 rounded-full text-sm font-medium text-white transition"
-                  style={{ background: cfg.buttonBg, backdropFilter: "blur(8px)" }}
+                  className="px-6 py-2.5 rounded-full text-sm font-medium text-white transition hover:opacity-90"
+                  style={{ background: cfg.buttonBg }}
                 >
                   Take a break
                 </button>
                 <button
                   onClick={t.backToWork}
-                  className="px-6 py-2.5 rounded-full text-sm font-medium text-sky-600 bg-white/60 hover:bg-white/80 transition"
+                  className="px-6 py-2.5 rounded-full text-sm font-medium text-[#464646] dark:text-[#C8C8C8] bg-white/80 dark:bg-[#1A1D27]/80 border border-[#D3D3D3] dark:border-[#2E3347] hover:bg-white dark:hover:bg-[#22263A] transition"
                 >
                   Skip break
                 </button>
@@ -219,8 +218,8 @@ function FullTimer({ onClose }: { onClose?: () => void }) {
             ) : (
               <button
                 onClick={t.backToWork}
-                className="px-6 py-2.5 rounded-full text-sm font-medium text-white transition"
-                style={{ background: cfg.buttonBg, backdropFilter: "blur(8px)" }}
+                className="px-6 py-2.5 rounded-full text-sm font-medium text-white transition hover:opacity-90"
+                style={{ background: cfg.buttonBg }}
               >
                 Start focusing
               </button>
@@ -232,21 +231,26 @@ function FullTimer({ onClose }: { onClose?: () => void }) {
       {/* Controls */}
       {!isDone && (
         <div className="mt-12 flex items-center gap-5">
-          {/* Reset */}
+          {/* Reset / Replay */}
           <button
             onClick={t.reset}
             disabled={timerState === "idle"}
-            className="w-11 h-11 flex items-center justify-center rounded-full bg-white/50 text-sky-400 hover:bg-white/70 disabled:opacity-30 transition text-lg"
+            className="w-11 h-11 flex items-center justify-center rounded-full bg-white/80 dark:bg-[#1A1D27]/80 border border-[#D3D3D3]/70 dark:border-[#2E3347]/70 text-[#464646] dark:text-[#C8C8C8] hover:bg-white dark:hover:bg-[#22263A] hover:text-[#000000] dark:hover:text-[#F5F6F8] disabled:opacity-30 disabled:cursor-not-allowed transition"
             aria-label="Reset"
+            title="Reset timer"
           >
-            ↺
+            {/* Replay / reset icon */}
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+              <path d="M3 3v5h5" />
+            </svg>
           </button>
 
           {/* Play / Pause */}
           <button
             onClick={isRunning ? t.pause : t.start}
-            className="w-16 h-16 flex items-center justify-center rounded-full text-white text-xl transition hover:scale-105 active:scale-95"
-            style={{ background: cfg.buttonBg, boxShadow: `0 8px 24px ${cfg.glow}`, backdropFilter: "blur(8px)" }}
+            className="w-16 h-16 flex items-center justify-center rounded-full text-white text-xl transition hover:opacity-90 active:scale-95"
+            style={{ background: cfg.buttonBg, boxShadow: `0 8px 24px ${cfg.glow}` }}
             aria-label={isRunning ? "Pause" : "Start"}
           >
             {isRunning ? "⏸" : "▶"}
@@ -255,23 +259,28 @@ function FullTimer({ onClose }: { onClose?: () => void }) {
           {/* Skip */}
           <button
             onClick={t.skip}
-            className="w-11 h-11 flex items-center justify-center rounded-full bg-white/50 text-sky-400 hover:bg-white/70 transition text-lg"
+            className="w-11 h-11 flex items-center justify-center rounded-full bg-white/80 dark:bg-[#1A1D27]/80 border border-[#D3D3D3]/70 dark:border-[#2E3347]/70 text-[#464646] dark:text-[#C8C8C8] hover:bg-white dark:hover:bg-[#22263A] hover:text-[#000000] dark:hover:text-[#F5F6F8] transition"
             aria-label="Skip"
+            title="Skip to end"
           >
-            ⏭
+            {/* Skip forward icon */}
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="5 4 15 12 5 20 5 4" />
+              <line x1="19" y1="5" x2="19" y2="19" />
+            </svg>
           </button>
         </div>
       )}
 
       {/* Sublabel */}
       {!isDone && (
-        <p className="mt-5 text-xs text-sky-300 tracking-wide">{cfg.sublabel}</p>
+        <p className="mt-5 text-xs text-[#464646] dark:text-[#8F8F8F] font-medium tracking-wide">{cfg.sublabel}</p>
       )}
     </div>
   );
 }
 
-// ─── Compact Timer (sidebar / SmartDayView) ───────────────────────────────────
+// ─── Compact Timer ────────────────────────────────────────────────────────────
 
 function CompactTimer({ onExpand }: { onExpand?: () => void }) {
   const t = useTimer();
@@ -290,7 +299,7 @@ function CompactTimer({ onExpand }: { onExpand?: () => void }) {
         title="Open full timer"
       >
         <svg viewBox="0 0 84 84" width={84} height={84}>
-          <circle cx={42} cy={42} r={COMP_R} fill="none" stroke={cfg.track} strokeWidth={3} strokeOpacity={0.5} />
+          <circle cx={42} cy={42} r={COMP_R} fill="none" stroke={cfg.track} strokeWidth={3} />
           <circle
             cx={42} cy={42} r={COMP_R}
             fill="none"
@@ -304,8 +313,8 @@ function CompactTimer({ onExpand }: { onExpand?: () => void }) {
           />
         </svg>
         <div className="absolute flex flex-col items-center">
-          <span className="text-sm font-light tabular-nums text-sky-700">{fmt(timeLeft)}</span>
-          <span className="text-[9px] text-sky-400 uppercase tracking-wider">
+          <span className="text-sm font-light tabular-nums text-[#000000] dark:text-[#F5F6F8]">{fmt(timeLeft)}</span>
+          <span className="text-[9px] text-[#464646] dark:text-[#C8C8C8] uppercase tracking-wider">
             {phase === "work" ? "focus" : "break"}
           </span>
         </div>
@@ -315,11 +324,11 @@ function CompactTimer({ onExpand }: { onExpand?: () => void }) {
       {isDone && (
         <div className="flex gap-1.5">
           {phase === "work" ? (
-            <button onClick={t.startBreak} className="text-xs px-2.5 py-1 rounded-full bg-sky-100 text-sky-600 hover:bg-sky-200 transition">
+            <button onClick={t.startBreak} className="text-xs px-2.5 py-1 rounded-full bg-[#EBF8FA] dark:bg-[#0D2F33] text-[#1A7F8C] dark:text-[#60CCD4] hover:bg-[#D4F3F6] dark:hover:bg-[#113740] transition font-medium">
               Break
             </button>
           ) : (
-            <button onClick={t.backToWork} className="text-xs px-2.5 py-1 rounded-full bg-sky-100 text-sky-600 hover:bg-sky-200 transition">
+            <button onClick={t.backToWork} className="text-xs px-2.5 py-1 rounded-full bg-[#EBF8FA] dark:bg-[#0D2F33] text-[#1A7F8C] dark:text-[#60CCD4] hover:bg-[#D4F3F6] dark:hover:bg-[#113740] transition font-medium">
               Focus
             </button>
           )}
@@ -329,29 +338,43 @@ function CompactTimer({ onExpand }: { onExpand?: () => void }) {
       {/* Controls */}
       {!isDone && (
         <div className="flex items-center gap-2">
+          {/* Reset */}
           <button
             onClick={t.reset}
             disabled={timerState === "idle"}
-            className="w-7 h-7 flex items-center justify-center rounded-full bg-sky-50 text-sky-400 hover:bg-sky-100 disabled:opacity-30 transition text-sm"
+            className="w-7 h-7 flex items-center justify-center rounded-full bg-[#F0F1F5] dark:bg-[#22263A] text-[#464646] dark:text-[#C8C8C8] hover:bg-[#E5E6EC] dark:hover:bg-[#2E3347] disabled:opacity-30 disabled:cursor-not-allowed transition"
+            aria-label="Reset"
+            title="Reset"
           >
-            ↺
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+              <path d="M3 3v5h5" />
+            </svg>
           </button>
+          {/* Play/Pause */}
           <button
             onClick={isRunning ? t.pause : t.start}
-            className="w-9 h-9 flex items-center justify-center rounded-full text-white text-sm transition hover:scale-105"
+            className="w-9 h-9 flex items-center justify-center rounded-full text-white text-sm transition hover:opacity-90 active:scale-95"
             style={{ background: cfg.buttonBg }}
+            aria-label={isRunning ? "Pause" : "Start"}
           >
             {isRunning ? "⏸" : "▶"}
           </button>
+          {/* Skip */}
           <button
             onClick={t.skip}
-            className="w-7 h-7 flex items-center justify-center rounded-full bg-sky-50 text-sky-400 hover:bg-sky-100 transition text-sm"
+            className="w-7 h-7 flex items-center justify-center rounded-full bg-[#F0F1F5] dark:bg-[#22263A] text-[#464646] dark:text-[#C8C8C8] hover:bg-[#E5E6EC] dark:hover:bg-[#2E3347] transition"
+            aria-label="Skip"
+            title="Skip"
           >
-            ⏭
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="5 4 15 12 5 20 5 4" />
+              <line x1="19" y1="5" x2="19" y2="19" />
+            </svg>
           </button>
         </div>
       )}
-      <p className="text-[10px] text-sky-300 tracking-wide">20 min · distraction-free</p>
+      <p className="text-[10px] text-[#8F8F8F] tracking-wide">20 min · distraction-free</p>
     </div>
   );
 }
@@ -371,8 +394,8 @@ export function FocusTimer({ fullscreen = false, onClose }: FocusTimerProps) {
   }
 
   return (
-    <div className="glass rounded-2xl py-4 px-3">
-      <p className="text-sm font-semibold text-gray-900 mb-3 text-center">
+    <div className="bg-white dark:bg-[#1A1D27] border border-[#EBEBEB] dark:border-[#1E2235] rounded-xl py-4 px-3 shadow-sm">
+      <p className="text-sm font-semibold text-[#000000] dark:text-[#F5F6F8] mb-3 text-center">
         Focus Timer
       </p>
       <CompactTimer onExpand={() => setExpanded(true)} />

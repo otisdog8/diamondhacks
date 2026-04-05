@@ -27,7 +27,7 @@ export function LeaveReminder({
   const minsUntilLeave = (leaveAt.getTime() - now.getTime()) / 60_000;
 
   const isUrgent = minsUntilLeave <= 5 && minsUntilLeave > 0;
-  const isLate = minsUntilLeave <= 0;
+  const isLate   = minsUntilLeave <= 0;
 
   const leaveLabel = leaveAt.toLocaleTimeString([], {
     hour: "numeric",
@@ -59,30 +59,22 @@ export function LeaveReminder({
     setEditing(false);
   };
 
+  const urgentBg = isLate || isUrgent
+    ? "bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800"
+    : "bg-white dark:bg-[#1A1D27] border-[#EBEBEB] dark:border-[#1E2235]";
+
   return (
-    <div
-      className={`rounded-2xl border shadow-sm p-4 transition-colors ${
-        isLate
-          ? "bg-amber-50 border-sky-100"
-          : isUrgent
-          ? "bg-amber-50 border-sky-100"
-          : "bg-white border-sky-100/60"
-      }`}
-    >
+    <div className={`rounded-xl border shadow-sm p-4 transition-colors ${urgentBg}`}>
       <div className="flex items-start justify-between gap-2">
         <div>
-          <p className="text-xs font-semibold text-sky-400 uppercase tracking-widest mb-1">
+          <p className="text-xs font-semibold text-[#8F8F8F] uppercase tracking-widest mb-1">
             Leave reminder
           </p>
-          <p
-            className={`text-lg font-semibold ${
-              isLate || isUrgent ? "text-sky-600" : "text-sky-700"
-            }`}
-          >
+          <p className={`text-lg font-semibold ${isLate || isUrgent ? "text-amber-700 dark:text-amber-400" : "text-[#000000] dark:text-[#F5F6F8]"}`}>
             {statusText}
           </p>
-          <p className="text-sm text-sky-400 mt-0.5">{subText}</p>
-          <p className="text-xs text-sky-400 mt-1">
+          <p className="text-sm text-[#8F8F8F] mt-0.5">{subText}</p>
+          <p className="text-xs text-[#8F8F8F] mt-1">
             for {nextClass.code}
             {nextClass.location ? ` · ${nextClass.location}` : ""}
           </p>
@@ -100,12 +92,12 @@ export function LeaveReminder({
                 onChange={(e) => setDraft(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSaveTravel()}
                 autoFocus
-                className="w-12 text-sm text-center border border-sky-100 rounded-lg px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-sky-300"
+                className="w-12 text-sm text-center border border-[#D3D3D3] dark:border-[#2E3347] bg-white dark:bg-[#1A1D27] text-[#000000] dark:text-[#F5F6F8] rounded-lg px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              <span className="text-xs text-sky-400">min</span>
+              <span className="text-xs text-[#8F8F8F]">min</span>
               <button
                 onClick={handleSaveTravel}
-                className="text-sky-500 text-xs font-medium ml-1"
+                className="text-blue-500 hover:text-blue-700 text-xs font-medium ml-1 transition-colors"
               >
                 Save
               </button>
@@ -113,7 +105,7 @@ export function LeaveReminder({
           ) : (
             <button
               onClick={() => setEditing(true)}
-              className="text-xs text-sky-400 hover:text-sky-600 transition-colors"
+              className="text-xs text-[#8F8F8F] hover:text-[#464646] dark:hover:text-[#C8C8C8] transition-colors"
             >
               {travelMinutes}m walk ✎
             </button>

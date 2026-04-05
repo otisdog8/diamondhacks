@@ -354,7 +354,7 @@ export function CalendarLayout({ showGoogleEvents = true }: CalendarLayoutProps)
           onAddLocationOverride={addLocationOverride}
           onRemoveLocationOverride={removeLocationOverride}
         />
-        <main className="flex-1 overflow-hidden bg-white">
+        <main className="flex-1 overflow-hidden bg-white dark:bg-[#0F1117]">
           {view === "month" && <CalendarMonthView {...sharedProps} />}
           {view === "week" && <CalendarWeekView {...sharedProps} />}
           {view === "day" && <CalendarDayView {...sharedProps} />}

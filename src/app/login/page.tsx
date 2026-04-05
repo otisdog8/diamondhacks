@@ -3,19 +3,25 @@
 import { LoginForm } from "@/components/auth/LoginForm";
 import { Card } from "@/components/ui/Card";
 import Link from "next/link";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 export default function LoginPage() {
   return (
-    <div className="flex-1 flex items-center justify-center px-4 py-12">
+    <div className="flex-1 flex items-center justify-center px-4 py-12 relative">
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <Link href="/" style={{ textDecoration: "none" }}>
-            <span style={{ fontSize: 36, fontWeight: 800, letterSpacing: -1, lineHeight: 1 }}>
-              <span style={{ color: "#5B6CFF" }}>in</span>
-              <span className="text-gray-900 dark:text-white">btwn</span>
+          <Link href="/" className="inline-flex items-center gap-2 justify-center">
+            <span className="flex h-7 w-7 items-center justify-center rounded-md bg-blue-500 text-[12px] font-bold text-white">
+              i
+            </span>
+            <span className="text-2xl font-bold text-[#000000] dark:text-[#F5F6F8] tracking-tight">
+              inBtwn
             </span>
           </Link>
-          <p className="mt-3 text-gray-500 dark:text-gray-400 text-sm">
+          <p className="mt-3 text-[#8F8F8F] dark:text-[#8F8F8F]">
             Sign in to your account
           </p>
         </div>
