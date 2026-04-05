@@ -23,23 +23,8 @@ function spreadMilestoneDates(dueDate: string, count: number): string[] {
   );
 }
 
-async function callClaude(prompt: string): Promise<string> {
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": process.env.ANTHROPIC_API_KEY ?? "",
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 1000,
-      messages: [{ role: "user", content: prompt }],
-    }),
-  });
-  const data = await res.json();
-  return data.content?.[0]?.text ?? "";
-}
+import { callAI } from "@/lib/ai/openrouter";
+const callClaude = callAI;
 
 export const assignmentProvider: IAssignmentProvider = {
   async getAssignmentsForClass(userId, classId) {
@@ -154,84 +139,82 @@ Example format:
     return updated;
   },
 
-  async syncFromCanvas(userId, classId, canvasUrl) {
+  async syncFromCanvas(userId, classId, _canvasUrl) {
     const cls = await repo.findClassById(classId);
     if (!cls) throw new Error("Class not found");
 
-    const profile = await repo.findProfileByUserAndService(userId, "canvas");
-    if (!profile?.profileId) {
-      throw new Error("No Canvas session found. Please connect Canvas first.");
+    // Extract assignments from already-scraped class data using Claude
+    // instead of spinning up a new Browser Use session
+    const rawData = cls.rawData as Record<string, string> | undefined;
+    const syllabusText = rawData?.syllabusText ?? "";
+    const rawNotes = rawData?.rawNotes ?? "";
+    const description = cls.description ?? "";
+
+    const combinedText = [syllabusText, rawNotes, description].filter(Boolean).join("\n\n");
+    if (!combinedText.trim()) {
+      throw new Error("No scraped data available for this class. Try re-importing from Canvas first.");
     }
 
-    const client = getClient();
-    const session = await client.sessions.create({ profileId: profile.profileId });
+    const prompt = `Extract all assignments, exams, quizzes, essays, projects, and deadlines from this class information for ${cls.code} (${cls.name}).
+
+Here is all the scraped data:
+${combinedText.slice(0, 6000)}
+
+For each assignment/deadline found, return:
+- id: a short unique identifier (e.g. "essay1", "midterm", "hw3")
+- title: the assignment name
+- description: brief description if available (string or null)
+- dueDate: due date in ISO 8601 format YYYY-MM-DD (string or null). If only a rough date like "Week 5" is given, estimate based on a quarter starting 2026-03-30.
+- points: point value as a number if mentioned (number or null)
+- type: one of "homework", "project", "exam", "quiz", "lab", "other"
+
+Return ONLY a JSON array, no other text. If no assignments are found, return [].`;
+
+    const response = await callClaude(prompt);
+
+    let scraped: Array<{
+      id: string;
+      title: string;
+      description?: string;
+      dueDate?: string;
+      points?: number;
+      type: IAssignment["type"];
+    }> = [];
 
     try {
-      const task = `
-        Go to ${canvasUrl}/courses/${cls.canvasId}/assignments.
-        Find ALL assignments listed on this page.
-        For each assignment return:
-          - id: Canvas assignment ID (string)
-          - title: assignment name (string)
-          - description: brief description if shown (string or null)
-          - dueDate: due date in ISO 8601 format YYYY-MM-DD (string or null)
-          - points: point value as a number (number or null)
-          - type: one of "homework", "project", "exam", "quiz", "lab", "other"
-        Return ONLY a JSON array, no other text.
-      `;
-
-      const run = client.run(task, { sessionId: session.id, model: "bu-mini" });
-      // Drain the async iterable
-      for await (const _step of run) { /* progress steps */ }
-      const result = run.result;
-
-      let scraped: Array<{
-        id: string;
-        title: string;
-        description?: string;
-        dueDate?: string;
-        points?: number;
-        type: IAssignment["type"];
-      }> = [];
-
-      try {
-        const text = result?.output ?? "";
-        const match = text.match(/\[[\s\S]*\]/);
-        if (match) scraped = JSON.parse(match[0]);
-      } catch {
-        console.error("Failed to parse Canvas assignments", result);
-      }
-
-      const created: IAssignment[] = [];
-      for (const a of scraped) {
-        const exists = [...assignmentsStore.values()].find(
-          (ex) =>
-            ex.userId === userId &&
-            ex.classId === classId &&
-            ex.canvasAssignmentId === a.id
-        );
-        if (exists) continue;
-        if (!a.dueDate) continue;
-
-        const assignment = await assignmentProvider.createAssignment({
-          userId,
-          classId,
-          title: a.title,
-          description: a.description,
-          dueDate: a.dueDate,
-          points: a.points,
-          type: a.type ?? "homework",
-          source: "canvas",
-          canvasAssignmentId: a.id,
-          completed: false,
-        });
-        created.push(assignment);
-      }
-
-      return created;
-    } finally {
-      await client.sessions.stop(session.id);
+      const match = response.match(/\[[\s\S]*\]/);
+      if (match) scraped = JSON.parse(match[0]);
+    } catch {
+      console.error("Failed to parse assignment extraction response");
     }
+
+    const created: IAssignment[] = [];
+    for (const a of scraped) {
+      const exists = [...assignmentsStore.values()].find(
+        (ex) =>
+          ex.userId === userId &&
+          ex.classId === classId &&
+          (ex.canvasAssignmentId === a.id || ex.title === a.title)
+      );
+      if (exists) continue;
+      if (!a.dueDate) continue;
+
+      const assignment = await assignmentProvider.createAssignment({
+        userId,
+        classId,
+        title: a.title,
+        description: a.description,
+        dueDate: a.dueDate,
+        points: a.points,
+        type: a.type ?? "homework",
+        source: "canvas",
+        canvasAssignmentId: a.id,
+        completed: false,
+      });
+      created.push(assignment);
+    }
+
+    return created;
   },
 
   async exportToCalendar(assignmentId, userId) {

@@ -37,23 +37,8 @@ async function tlFetch(path: string, options?: RequestInit) {
   return res.json();
 }
 
-async function callClaude(prompt: string): Promise<string> {
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": process.env.ANTHROPIC_API_KEY ?? "",
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model: "claude-sonnet-4-6",
-      max_tokens: 2000,
-      messages: [{ role: "user", content: prompt }],
-    }),
-  });
-  const data = await res.json();
-  return data.content?.[0]?.text ?? "";
-}
+import { callAI } from "@/lib/ai/openrouter";
+const callClaude = callAI;
 
 // Ensure a TwelveLabs index exists for CanvasCal (one-time setup per API key)
 async function ensureIndex(): Promise<string> {
