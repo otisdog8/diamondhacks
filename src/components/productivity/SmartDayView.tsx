@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useClasses } from "@/hooks/useClasses";
 import { useTravelPreferences } from "@/hooks/useTravelPreferences";
 import { getTodaysEvents, getNextClassDay } from "./types";
@@ -43,6 +43,7 @@ function computeTravelMinutes(
 export function SmartDayView() {
   const { classes, loading } = useClasses();
   const { prefs } = useTravelPreferences();
+  const [timerOpen, setTimerOpen] = useState(false);
 
   const todayEvents = getTodaysEvents(classes);
   const hasClasses = classes.length > 0;
@@ -59,7 +60,6 @@ export function SmartDayView() {
     nextClass != null &&
     nextClass.startTime.getTime() - now.getTime() < 90 * 60_000;
 
-  // If there are no classes today but classes exist, show the next class day
   const nextDay = todayEvents.length === 0 && hasClasses ? getNextClassDay(classes) : null;
 
   if (loading) {
@@ -90,7 +90,7 @@ export function SmartDayView() {
         </div>
         <div className="flex flex-col gap-4">
           <TodoList />
-          <FocusTimer />
+          <FocusTimer expanded={timerOpen} onExpandChange={setTimerOpen} />
         </div>
       </div>
     );
@@ -98,32 +98,27 @@ export function SmartDayView() {
 
   return (
     <div className="space-y-4">
-      {/* Top: Right Now */}
-      <RightNowPanel events={todayEvents} hasClasses={hasClasses} nextDay={nextDay} />
+      {/* Right Now — primary entry point */}
+      <RightNowPanel
+        events={todayEvents}
+        hasClasses={hasClasses}
+        nextDay={nextDay}
+        onStartFocus={() => setTimerOpen(true)}
+      />
 
       {/* Leave reminder — only when approaching next class */}
       {showLeaveReminder && nextClass && (
-        <LeaveReminder
-          nextClass={nextClass}
-          travelMinutes={travelMins}
-        />
+        <LeaveReminder nextClass={nextClass} travelMinutes={travelMins} />
       )}
 
       {/* Main layout: timeline + sidebar */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Timeline — takes up 2/3 */}
         <div className="lg:col-span-2">
-          <DailyTimeline
-            events={todayEvents}
-            nextDay={nextDay}
-            homeBase={prefs.homeBase}
-          />
+          <DailyTimeline events={todayEvents} nextDay={nextDay} homeBase={prefs.homeBase} />
         </div>
-
-        {/* Sidebar — tasks + timer */}
         <div className="flex flex-col gap-4">
           <TodoList />
-          <FocusTimer />
+          <FocusTimer expanded={timerOpen} onExpandChange={setTimerOpen} />
         </div>
       </div>
     </div>

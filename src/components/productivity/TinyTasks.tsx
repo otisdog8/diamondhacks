@@ -1,12 +1,17 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import type { ClassEvent } from "./types";
+import type { TimeSuggestion } from "@/hooks/useTaskSuggestions";
+import { useTaskSuggestions } from "@/hooks/useTaskSuggestions";
+import { SuggestedTimeBlocks } from "./SuggestedTimeBlocks";
 
 interface Task {
   id: string;
   text: string;
   estimateMins?: number;
   done: boolean;
+  scheduled?: TimeSuggestion;
 }
 
 function parseTask(raw: string): { text: string; estimateMins?: number } {
@@ -15,25 +20,141 @@ function parseTask(raw: string): { text: string; estimateMins?: number } {
   return { text: raw.trim() };
 }
 
-export function TinyTasks() {
+function fmt(d: Date): string {
+  return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+}
+
+// Per-task row — needs its own hook call for suggestions
+function TaskRow({
+  task,
+  events,
+  now,
+  onToggle,
+  onRemove,
+  onSchedule,
+}: {
+  task: Task;
+  events: ClassEvent[];
+  now: Date;
+  onToggle: (id: string) => void;
+  onRemove: (id: string) => void;
+  onSchedule: (id: string, s: TimeSuggestion) => void;
+}) {
+  const suggestions = useTaskSuggestions(events, task.estimateMins, now);
+  const [selectedId, setSelectedId] = useState<string | undefined>(
+    task.scheduled?.id,
+  );
+
+  const isSmallTask = !!task.estimateMins && task.estimateMins <= 30;
+  const showSuggestions = isSmallTask && !task.done && !task.scheduled && suggestions.length > 0;
+
+  function handleSelect(s: TimeSuggestion) {
+    setSelectedId(s.id);
+    onSchedule(task.id, s);
+  }
+
+  return (
+    <div className="rounded-xl transition-all duration-200">
+      {/* Main row */}
+      <div className="flex items-center gap-2.5 group px-1 py-1 rounded-xl hover:bg-white/60 transition">
+        <button
+          onClick={() => onToggle(task.id)}
+          className={[
+            "w-4 h-4 rounded border shrink-0 transition flex items-center justify-center",
+            task.done
+              ? "border-sky-300 bg-sky-300"
+              : "border-gray-300 hover:border-[#1B4457] bg-white/80",
+          ].join(" ")}
+        >
+          {task.done && <span className="text-white text-[9px] leading-none">✓</span>}
+        </button>
+
+        <span
+          className={`flex-1 text-sm ${
+            task.done ? "text-gray-400 line-through" : "text-gray-700"
+          }`}
+        >
+          {task.text}
+        </span>
+
+        {task.estimateMins && !task.done && !task.scheduled && (
+          <span className="text-xs text-gray-400 shrink-0">{task.estimateMins}m</span>
+        )}
+
+        {task.scheduled && !task.done && (
+          <span className="text-[10px] text-sky-500 font-medium shrink-0 bg-sky-50 px-1.5 py-0.5 rounded-full border border-sky-200">
+            {fmt(task.scheduled.start)}
+          </span>
+        )}
+
+        <button
+          onClick={() => onRemove(task.id)}
+          className="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-gray-500 text-xs transition"
+        >
+          ✕
+        </button>
+      </div>
+
+      {/* Scheduled confirmation */}
+      {task.scheduled && !task.done && (
+        <div className="ml-[26px] mb-1 text-[10px] text-sky-400">
+          {task.scheduled.label} · {fmt(task.scheduled.start)} – {fmt(task.scheduled.end)}
+        </div>
+      )}
+
+      {/* Suggestions */}
+      {showSuggestions && (
+        <SuggestedTimeBlocks
+          suggestions={suggestions}
+          selectedId={selectedId}
+          onSelect={handleSelect}
+        />
+      )}
+    </div>
+  );
+}
+
+interface TinyTasksProps {
+  events?: ClassEvent[];
+}
+
+export function TinyTasks({ events = [] }: TinyTasksProps) {
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [input, setInput]  = useState("");
+  const [input, setInput] = useState("");
+  const [now, setNow] = useState(() => new Date());
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Keep "now" fresh so suggestions stay accurate
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(id);
+  }, []);
 
   const addTask = () => {
     const trimmed = input.trim();
     if (!trimmed) return;
     const { text, estimateMins } = parseTask(trimmed);
-    setTasks((prev) => [...prev, { id: Date.now().toString(), text, estimateMins, done: false }]);
+    setTasks((prev) => [
+      ...prev,
+      { id: Date.now().toString(), text, estimateMins, done: false },
+    ]);
     setInput("");
     inputRef.current?.focus();
   };
 
-  const toggleTask  = (id: string) => setTasks((p) => p.map((t) => t.id === id ? { ...t, done: !t.done } : t));
-  const removeTask  = (id: string) => setTasks((p) => p.filter((t) => t.id !== id));
+  const toggleTask = (id: string) =>
+    setTasks((p) => p.map((t) => (t.id === id ? { ...t, done: !t.done } : t)));
+
+  const removeTask = (id: string) =>
+    setTasks((p) => p.filter((t) => t.id !== id));
+
+  const scheduleTask = (id: string, s: TimeSuggestion) =>
+    setTasks((p) =>
+      p.map((t) => (t.id === id ? { ...t, scheduled: s } : t)),
+    );
 
   const active = tasks.filter((t) => !t.done);
-  const done   = tasks.filter((t) => t.done);
+  const done = tasks.filter((t) => t.done);
 
   return (
     <div className="bg-white dark:bg-[#1A1D27] border border-[#EBEBEB] dark:border-[#1E2235] rounded-xl p-5 shadow-sm">
@@ -65,43 +186,30 @@ export function TinyTasks() {
 
       <div className="space-y-1.5">
         {active.map((task) => (
-          <div key={task.id} className="flex items-center gap-2.5 group px-1 py-1 rounded-lg hover:bg-[#F5F6F8] dark:hover:bg-[#22263A] transition">
-            <button
-              onClick={() => toggleTask(task.id)}
-              className="w-4 h-4 rounded border border-[#D3D3D3] dark:border-[#2E3347] shrink-0 hover:border-blue-500 transition flex items-center justify-center bg-white dark:bg-[#22263A]"
-            />
-            <span className="flex-1 text-sm text-[#464646] dark:text-[#C8C8C8]">{task.text}</span>
-            {task.estimateMins && (
-              <span className="text-xs text-[#8F8F8F] shrink-0">{task.estimateMins}m</span>
-            )}
-            <button
-              onClick={() => removeTask(task.id)}
-              className="opacity-0 group-hover:opacity-100 text-[#C8C8C8] hover:text-[#8F8F8F] text-xs transition"
-            >
-              ✕
-            </button>
-          </div>
+          <TaskRow
+            key={task.id}
+            task={task}
+            events={events}
+            now={now}
+            onToggle={toggleTask}
+            onRemove={removeTask}
+            onSchedule={scheduleTask}
+          />
         ))}
       </div>
 
       {done.length > 0 && (
         <div className="mt-3 pt-3 border-t border-[#EBEBEB] dark:border-[#1E2235] space-y-1.5">
           {done.map((task) => (
-            <div key={task.id} className="flex items-center gap-2.5 group px-1 py-1 rounded-lg">
-              <button
-                onClick={() => toggleTask(task.id)}
-                className="w-4 h-4 rounded border border-blue-400 bg-blue-500 shrink-0 flex items-center justify-center"
-              >
-                <span className="text-white text-[9px] leading-none">✓</span>
-              </button>
-              <span className="flex-1 text-sm text-[#C8C8C8] line-through">{task.text}</span>
-              <button
-                onClick={() => removeTask(task.id)}
-                className="opacity-0 group-hover:opacity-100 text-[#C8C8C8] hover:text-[#8F8F8F] text-xs transition"
-              >
-                ✕
-              </button>
-            </div>
+            <TaskRow
+              key={task.id}
+              task={task}
+              events={events}
+              now={now}
+              onToggle={toggleTask}
+              onRemove={removeTask}
+              onSchedule={scheduleTask}
+            />
           ))}
           <button
             onClick={() => setTasks((p) => p.filter((t) => !t.done))}

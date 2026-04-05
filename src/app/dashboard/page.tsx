@@ -14,20 +14,8 @@ import Link from "next/link";
 
 type Tab = "today" | "classes";
 
-function PageGreeting() {
-  const { user } = useAuth();
-  const name = user?.username
-    ? user.username.charAt(0).toUpperCase() + user.username.slice(1)
-    : "there";
-
-  return (
-    <p className="text-lg font-semibold text-[#000000] dark:text-[#F5F6F8]">
-      Hi {name}!
-    </p>
-  );
-}
-
 export default function DashboardPage() {
+  const { user } = useAuth();
   const [tab, setTab] = useState<Tab>("today");
   const { classes, fetchClasses } = useClasses();
   const { prefs, setHomeBase } = useTravelPreferences();
@@ -35,6 +23,14 @@ export default function DashboardPage() {
   const [showExportPanel, setShowExportPanel] = useState(false);
 
   const showTravelBanner = !prefs.homeBase && classes.length > 0 && !dismissed;
+
+  const now      = new Date();
+  const hour     = now.getHours();
+  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+  const name     = user?.username
+    ? user.username.charAt(0).toUpperCase() + user.username.slice(1)
+    : "";
+  const dateLabel = now.toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" });
 
   return (
     <div className="space-y-6">
@@ -53,7 +49,7 @@ export default function DashboardPage() {
             }}
             className="text-sm rounded-lg border border-orange-200 dark:border-orange-700 bg-white dark:bg-[#1A1D27] px-2 py-1.5 text-[#464646] dark:text-[#C8C8C8] focus:outline-none focus:ring-2 focus:ring-orange-400"
           >
-            <option value="">Choose residence...</option>
+            <option value="">Choose residence…</option>
             {ALL_RESIDENCES.map((r) => (
               <option key={r} value={r}>{locationLabel(r)}</option>
             ))}
@@ -70,14 +66,12 @@ export default function DashboardPage() {
       {/* ── Page header ── */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-[#000000] dark:text-[#F5F6F8]">Dashboard</h1>
-          <p className="text-[#8F8F8F] dark:text-[#8F8F8F] mt-0.5 text-sm">
-            {new Date().toLocaleDateString([], {
-              weekday: "long",
-              month: "long",
-              day: "numeric",
-            })}
-          </p>
+          <p className="text-xs font-medium text-[#8F8F8F] uppercase tracking-widest">{dateLabel}</p>
+          {name && (
+            <h1 className="text-xl font-semibold text-[#000000] dark:text-[#F5F6F8] mt-0.5">
+              {greeting}, {name}
+            </h1>
+          )}
         </div>
         <div className="flex gap-2">
           <Link href="/canvas">
@@ -93,9 +87,6 @@ export default function DashboardPage() {
           </button>
         </div>
       </div>
-
-      {/* ── External crawl utility ── */}
-      <CrawlExternalUrl />
 
       {/* ── Tabs ── */}
       <div className="flex gap-0 border-b border-[#D3D3D3] dark:border-[#2E3347]">
@@ -117,18 +108,16 @@ export default function DashboardPage() {
 
       {/* ── Tab content ── */}
       {tab === "today" ? (
-        <div className="space-y-4">
-          <PageGreeting />
-          <SmartDayView />
-        </div>
+        <SmartDayView />
       ) : (
         <div className="space-y-6">
           <ClassList />
+          <CrawlExternalUrl />
           <ScheduleChat onClassUpdated={fetchClasses} />
         </div>
       )}
 
-      {/* ── Export slide-over panel ───────────────────────────────────────── */}
+      {/* ── Export slide-over panel ── */}
       {showExportPanel && (
         <div className="fixed inset-0 z-50 flex justify-end">
           <div

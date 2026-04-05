@@ -1,6 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { useClasses } from "@/hooks/useClasses";
+import { getTodaysEvents } from "@/components/productivity/types";
+import { useTaskSuggestions } from "@/hooks/useTaskSuggestions";
+import { SuggestedTimeBlocks } from "@/components/productivity/SuggestedTimeBlocks";
 
 interface Todo {
   id: string;
@@ -18,6 +22,13 @@ export function TodoList() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [loading, setLoading] = useState(true);
   const [input, setInput] = useState("");
+  const [selectedSuggestion, setSelectedSuggestion] = useState<string | undefined>();
+
+  // Time suggestions: find schedule gaps for the most urgent todo
+  const { classes } = useClasses();
+  const todayEvents = useMemo(() => getTodaysEvents(classes), [classes]);
+  const now = useMemo(() => new Date(), []);
+  const suggestions = useTaskSuggestions(todayEvents, 20, now);
 
   const load = useCallback(async () => {
     try {
@@ -119,6 +130,15 @@ export function TodoList() {
           Add
         </button>
       </div>
+
+      {/* Smart time suggestions */}
+      {active.length > 0 && suggestions.length > 0 && (
+        <SuggestedTimeBlocks
+          suggestions={suggestions}
+          selectedId={selectedSuggestion}
+          onSelect={(s) => setSelectedSuggestion(s.id === selectedSuggestion ? undefined : s.id)}
+        />
+      )}
 
       {active.length === 0 && done.length === 0 && (
         <p className="text-sm text-gray-400 text-center py-2">
