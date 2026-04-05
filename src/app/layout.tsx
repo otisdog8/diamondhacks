@@ -12,8 +12,8 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "inBtwn - Your Class Schedule Companion",
-  description: "Import your Canvas class schedule, find free time, and export to Google Calendar.",
+  title: "inbtwn — Schedule Smarter",
+  description: "Import your Canvas class schedule, track assignments, and own your time.",
 };
 
 export default function RootLayout({
@@ -27,7 +27,6 @@ export default function RootLayout({
       className={poppins.variable + " h-full antialiased"}
       suppressHydrationWarning
     >
-      {/* No-flash script: apply .dark before first paint */}
       <head>
         <script
           dangerouslySetInnerHTML={{
@@ -41,7 +40,10 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="min-h-full flex flex-col bg-[#F5F6F8] dark:bg-[#0F1117]">
+      <body
+        className="min-h-full flex flex-col bg-[#F5F6F8] dark:bg-[#0F1117]"
+        style={{ fontFamily: "var(--font-poppins), sans-serif" }}
+      >
         <ThemeProvider>
           <AuthProvider>
             <ToastProvider>{children}</ToastProvider>

@@ -13,15 +13,13 @@ export default function LoginPage() {
       </div>
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2 justify-center">
-            <span className="flex h-7 w-7 items-center justify-center rounded-md bg-blue-500 text-[12px] font-bold text-white">
-              i
-            </span>
-            <span className="text-2xl font-bold text-[#000000] dark:text-[#F5F6F8] tracking-tight">
-              inBtwn
+          <Link href="/" style={{ textDecoration: "none" }}>
+            <span style={{ fontSize: 36, fontWeight: 800, letterSpacing: -1, lineHeight: 1 }}>
+              <span style={{ color: "#5B6CFF" }}>in</span>
+              <span className="text-[#000000] dark:text-[#F5F6F8]">btwn</span>
             </span>
           </Link>
-          <p className="mt-3 text-[#8F8F8F] dark:text-[#8F8F8F]">
+          <p className="mt-3 text-[#8F8F8F] text-sm">
             Sign in to your account
           </p>
         </div>
