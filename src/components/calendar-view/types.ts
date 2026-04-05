@@ -8,7 +8,8 @@ export type EventType =
   | "personal"
   | "google"
   | "travel"
-  | "office_hours";
+  | "office_hours"
+  | "final";
 
 export type CalendarView = "month" | "week" | "day";
 
@@ -89,6 +90,12 @@ export const EVENT_STYLE: Record<
     dot: "bg-teal-400",
     pill: "bg-teal-50 text-teal-600",
     label: "Office Hours",
+  },
+  final: {
+    card: "bg-red-50/80 border-l-2 border-l-red-400 text-red-700",
+    dot: "bg-red-400",
+    pill: "bg-red-50 text-red-600",
+    label: "Final / Midterm",
   },
 };
 
