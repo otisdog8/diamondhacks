@@ -71,9 +71,9 @@ export function CalendarSidebar({
     .sort((a, b) => a.startTime.getTime() - b.startTime.getTime())[0];
 
   return (
-    <aside className="w-48 border-r border-gray-200/80 bg-white/90 flex flex-col overflow-y-auto shrink-0">
+    <aside className="w-48 border-r border-gray-200/80 dark:border-[#1E2235] bg-white/90 dark:bg-[#1A1D27] flex flex-col overflow-y-auto shrink-0">
       {/* Mini calendar */}
-      <div className="p-4 border-b border-gray-200/60">
+      <div className="p-4 border-b border-gray-200/60 dark:border-[#1E2235]">
         <MiniCalendar
           selectedDate={currentDate}
           events={filteredEvents}
@@ -83,7 +83,7 @@ export function CalendarSidebar({
 
       {/* Next up */}
       {nextEvent && (
-        <div className="px-4 py-3 border-b border-gray-200/60">
+        <div className="px-4 py-3 border-b border-gray-200/60 dark:border-[#1E2235]">
           <p className="text-xs font-semibold text-sky-400 uppercase tracking-wider mb-2">
             Next up
           </p>
@@ -112,10 +112,10 @@ export function CalendarSidebar({
       {/* Collapsible sections */}
       <div className="flex-1 overflow-y-auto">
         {/* Upcoming events */}
-        <div className="border-b border-gray-200/60">
+        <div className="border-b border-gray-200/60 dark:border-[#1E2235]">
           <button
             onClick={() => toggle("upcoming")}
-            className="w-full flex items-center justify-between px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider hover:bg-gray-50 transition-colors"
+            className="w-full flex items-center justify-between px-4 py-2.5 text-xs font-semibold text-slate-500 dark:text-[#8F8F8F] uppercase tracking-wider hover:bg-gray-50 dark:hover:bg-[#22263A] transition-colors"
           >
             Upcoming
             <span className="text-sky-300 normal-case font-normal text-sm">
@@ -134,10 +134,10 @@ export function CalendarSidebar({
         </div>
 
         {/* Filters */}
-        <div className="border-b border-gray-200/60">
+        <div className="border-b border-gray-200/60 dark:border-[#1E2235]">
           <button
             onClick={() => toggle("filters")}
-            className="w-full flex items-center justify-between px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider hover:bg-gray-50 transition-colors"
+            className="w-full flex items-center justify-between px-4 py-2.5 text-xs font-semibold text-slate-500 dark:text-[#8F8F8F] uppercase tracking-wider hover:bg-gray-50 dark:hover:bg-[#22263A] transition-colors"
           >
             Categories
             <span className="text-sky-300 normal-case font-normal text-sm">
@@ -154,10 +154,10 @@ export function CalendarSidebar({
                     key={type}
                     onClick={() => onToggleType(type)}
                     className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs transition-colors
-                      ${hidden ? "opacity-40" : "hover:bg-gray-50"}`}
+                      ${hidden ? "opacity-40" : "hover:bg-gray-50 dark:hover:bg-[#22263A]"}`}
                   >
                     <span className={`w-2 h-2 rounded-full shrink-0 ${s.dot}`} />
-                    <span className="text-slate-600 capitalize">{s.label}</span>
+                    <span className="text-slate-600 dark:text-[#C8C8C8] capitalize">{s.label}</span>
                     {hidden && (
                       <span className="ml-auto text-sky-300">hidden</span>
                     )}
@@ -169,10 +169,10 @@ export function CalendarSidebar({
         </div>
 
         {/* Travel settings */}
-        <div className="border-b border-gray-200/60">
+        <div className="border-b border-gray-200/60 dark:border-[#1E2235]">
           <button
             onClick={() => toggle("travel")}
-            className="w-full flex items-center justify-between px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider hover:bg-gray-50 transition-colors"
+            className="w-full flex items-center justify-between px-4 py-2.5 text-xs font-semibold text-slate-500 dark:text-[#8F8F8F] uppercase tracking-wider hover:bg-gray-50 dark:hover:bg-[#22263A] transition-colors"
           >
             Travel
             <span className="text-sky-300 normal-case font-normal text-sm">
@@ -192,10 +192,10 @@ export function CalendarSidebar({
         </div>
 
         {/* Focus timer */}
-        <div className="border-b border-gray-200/60">
+        <div className="border-b border-gray-200/60 dark:border-[#1E2235]">
           <button
             onClick={() => toggle("focus")}
-            className="w-full flex items-center justify-between px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider hover:bg-gray-50 transition-colors"
+            className="w-full flex items-center justify-between px-4 py-2.5 text-xs font-semibold text-slate-500 dark:text-[#8F8F8F] uppercase tracking-wider hover:bg-gray-50 dark:hover:bg-[#22263A] transition-colors"
           >
             Focus timer
             <span className="text-sky-300 normal-case font-normal text-sm">
@@ -213,7 +213,7 @@ export function CalendarSidebar({
         <div>
           <button
             onClick={() => toggle("tasks")}
-            className="w-full flex items-center justify-between px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider hover:bg-gray-50 transition-colors"
+            className="w-full flex items-center justify-between px-4 py-2.5 text-xs font-semibold text-slate-500 dark:text-[#8F8F8F] uppercase tracking-wider hover:bg-gray-50 dark:hover:bg-[#22263A] transition-colors"
           >
             Tasks
             <span className="text-sky-300 normal-case font-normal text-sm">
@@ -277,7 +277,7 @@ function TravelSettings({
   return (
     <div className="px-3 pb-3 space-y-3">
       {/* Master toggle */}
-      <label className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer">
+      <label className="flex items-center gap-2 text-xs text-[#464646] dark:text-[#C8C8C8] cursor-pointer">
         <input
           type="checkbox"
           checked={prefs.travelEventsEnabled}
@@ -291,11 +291,11 @@ function TravelSettings({
         <>
           {/* Home base */}
           <div>
-            <label className="text-xs text-slate-500 block mb-1">Home base</label>
+            <label className="text-xs text-[#8F8F8F] block mb-1">Home base</label>
             <select
               value={prefs.homeBase ?? ""}
               onChange={(e) => onHomeBaseChange(e.target.value || null)}
-              className="w-full text-xs rounded-lg border border-sky-200 bg-white px-2 py-1.5 text-slate-700 focus:outline-none focus:ring-1 focus:ring-sky-400"
+              className="w-full text-xs rounded-lg border border-[#D3D3D3] dark:border-[#2E3347] bg-white dark:bg-[#22263A] px-2 py-1.5 text-[#464646] dark:text-[#C8C8C8] focus:outline-none focus:ring-1 focus:ring-sky-400"
             >
               <option value="">Not set</option>
               {ALL_RESIDENCES.map((r) => (
@@ -306,10 +306,10 @@ function TravelSettings({
 
           {/* Per-type toggles */}
           <div>
-            <p className="text-xs text-slate-500 mb-1.5">Show travel for:</p>
+            <p className="text-xs text-[#8F8F8F] mb-1.5">Show travel for:</p>
             <div className="space-y-1">
               {TYPE_TOGGLES.map(({ key, label, prefsKey }) => (
-                <label key={key} className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer">
+                <label key={key} className="flex items-center gap-2 text-xs text-[#464646] dark:text-[#C8C8C8] cursor-pointer">
                   <input
                     type="checkbox"
                     checked={prefs[prefsKey] as boolean}
@@ -324,9 +324,9 @@ function TravelSettings({
 
           {/* Location overrides */}
           <div>
-            <p className="text-xs text-slate-500 mb-1.5">During long gaps, I'll be at:</p>
+            <p className="text-xs text-[#8F8F8F] mb-1.5">During long gaps, I&apos;ll be at:</p>
             {prefs.locationOverrides.map((o) => (
-              <div key={o.id} className="flex items-center gap-1.5 text-xs text-slate-600 mb-1">
+              <div key={o.id} className="flex items-center gap-1.5 text-xs text-[#464646] dark:text-[#C8C8C8] mb-1">
                 <span className="truncate flex-1">
                   {locationLabel(o.location)} (gap &ge; {o.minGapMinutes}m)
                 </span>
@@ -341,21 +341,21 @@ function TravelSettings({
             {showAddOverride ? (
               <div className="space-y-1.5 mt-1">
                 <div className="flex items-center gap-1 text-xs">
-                  <span className="text-slate-400 shrink-0">Gap &ge;</span>
+                  <span className="text-[#8F8F8F] shrink-0">Gap &ge;</span>
                   <input
                     type="number"
                     min={10}
                     max={180}
                     value={overrideGap}
                     onChange={(e) => setOverrideGap(e.target.value)}
-                    className="w-12 text-center border border-sky-200 rounded px-1 py-0.5 text-xs"
+                    className="w-12 text-center border border-[#D3D3D3] dark:border-[#2E3347] bg-white dark:bg-[#22263A] text-[#464646] dark:text-[#C8C8C8] rounded px-1 py-0.5 text-xs"
                   />
-                  <span className="text-slate-400">min →</span>
+                  <span className="text-[#8F8F8F]">min →</span>
                 </div>
                 <select
                   value={overrideLocation}
                   onChange={(e) => setOverrideLocation(e.target.value)}
-                  className="w-full text-xs rounded border border-sky-200 bg-white px-2 py-1 text-slate-700"
+                  className="w-full text-xs rounded border border-[#D3D3D3] dark:border-[#2E3347] bg-white dark:bg-[#22263A] px-2 py-1 text-[#464646] dark:text-[#C8C8C8]"
                 >
                   <option value="">Select location...</option>
                   {allLocations.map((loc) => (
@@ -377,13 +377,13 @@ function TravelSettings({
                       }
                     }}
                     disabled={!overrideLocation}
-                    className="text-xs text-sky-600 font-medium disabled:opacity-40"
+                    className="text-xs text-sky-500 dark:text-sky-400 font-medium disabled:opacity-40"
                   >
                     Add
                   </button>
                   <button
                     onClick={() => setShowAddOverride(false)}
-                    className="text-xs text-slate-400"
+                    className="text-xs text-[#8F8F8F]"
                   >
                     Cancel
                   </button>
@@ -392,7 +392,7 @@ function TravelSettings({
             ) : (
               <button
                 onClick={() => setShowAddOverride(true)}
-                className="text-xs text-sky-500 hover:text-sky-700 mt-1"
+                className="text-xs text-sky-500 hover:text-sky-400 mt-1"
               >
                 + Add location rule
               </button>

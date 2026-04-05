@@ -37,31 +37,33 @@ interface CalendarTopBarProps {
 export function CalendarTopBar({ currentDate, view, onViewChange, onNavigate, onToday, onAddEvent }: CalendarTopBarProps) {
   const label = getViewLabel(view, currentDate);
   return (
-    <header className="flex items-center h-11 px-4 border-b border-gray-200/80 bg-white/90 backdrop-blur-sm shrink-0 gap-3">
+    <header className="flex items-center h-11 px-4 border-b border-[#EBEBEB] dark:border-[#1E2235] bg-white/95 dark:bg-[#1A1D27]/95 backdrop-blur-sm shrink-0 gap-3">
       <button
         onClick={onAddEvent}
-        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-[#163847] text-white hover:bg-[#1e4d5f] transition shrink-0 mr-1"
+        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition shrink-0 mr-1"
       >
         <span className="text-base leading-none">+</span> New
       </button>
 
       <div className="flex items-center gap-1">
-        <button onClick={onToday} className="px-3 py-1.5 text-xs font-medium text-gray-600 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 transition">
+        <button onClick={onToday} className="px-3 py-1.5 text-xs font-medium text-[#464646] dark:text-[#C8C8C8] rounded-lg border border-[#D3D3D3] dark:border-[#2E3347] bg-white dark:bg-[#1A1D27] hover:bg-[#F5F6F8] dark:hover:bg-[#22263A] transition">
           Today
         </button>
-        <button onClick={() => onNavigate(-1)} className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 transition text-sm">‹</button>
-        <button onClick={() => onNavigate(1)}  className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 transition text-sm">›</button>
+        <button onClick={() => onNavigate(-1)} className="w-7 h-7 flex items-center justify-center rounded-lg text-[#8F8F8F] hover:bg-[#F5F6F8] dark:hover:bg-[#22263A] hover:text-[#464646] dark:hover:text-[#C8C8C8] transition text-sm">‹</button>
+        <button onClick={() => onNavigate(1)}  className="w-7 h-7 flex items-center justify-center rounded-lg text-[#8F8F8F] hover:bg-[#F5F6F8] dark:hover:bg-[#22263A] hover:text-[#464646] dark:hover:text-[#C8C8C8] transition text-sm">›</button>
       </div>
 
-      <h1 className="text-sm font-semibold text-gray-900 flex-1 min-w-0 truncate">{label}</h1>
+      <h1 className="text-sm font-semibold text-[#000000] dark:text-[#F5F6F8] flex-1 min-w-0 truncate">{label}</h1>
 
-      <div className="flex rounded-lg border border-gray-200 overflow-hidden shrink-0 text-xs">
+      <div className="flex rounded-lg border border-[#D3D3D3] dark:border-[#2E3347] overflow-hidden shrink-0 text-xs">
         {(["day", "week", "month"] as CalendarView[]).map((v) => (
           <button
             key={v}
             onClick={() => onViewChange(v)}
             className={`px-3 py-1.5 font-medium capitalize transition
-              ${view === v ? "bg-gray-100 text-gray-900" : "text-gray-500 hover:bg-gray-50"}`}
+              ${view === v
+                ? "bg-blue-500 text-white"
+                : "text-[#464646] dark:text-[#C8C8C8] bg-white dark:bg-[#1A1D27] hover:bg-[#F5F6F8] dark:hover:bg-[#22263A]"}`}
           >
             {v}
           </button>

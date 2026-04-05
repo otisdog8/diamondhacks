@@ -1,5 +1,5 @@
 // ============================================================
-// inbtwn Extension Interfaces
+// inBtwn Extension Interfaces
 // All 5 extension providers — drop into src/lib/extensions/types.ts
 // ============================================================
 

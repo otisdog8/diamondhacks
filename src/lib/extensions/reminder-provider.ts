@@ -47,14 +47,14 @@ async function sendEmail(to: string, subject: string, body: string): Promise<boo
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: "inbtwn <reminders@inbtwn.app>",
+      from: "inBtwn <reminders@canvascal.app>",
       to,
       subject,
       html: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto">
-        <h2 style="color:#7f77dd">inbtwn Reminder</h2>
+        <h2 style="color:#7f77dd">inBtwn Reminder</h2>
         <p>${body.replace(/\n/g, "<br>")}</p>
         <hr style="border:none;border-top:1px solid #eee;margin:24px 0">
-        <p style="color:#888;font-size:12px">Sent by inbtwn · <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard">Manage reminders</a></p>
+        <p style="color:#888;font-size:12px">Sent by inBtwn · <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard">Manage reminders</a></p>
       </div>`,
     }),
   });
@@ -139,7 +139,7 @@ export const reminderProvider: IReminderProvider = {
     } else if (reminder.channel === "sms") {
       success = await sendSms(
         reminder.destination,
-        `inbtwn: ${cls.code} starts in ${reminder.minutesBefore} min — ${nextSlot?.location ?? "check your schedule"}`
+        `inBtwn: ${cls.code} starts in ${reminder.minutesBefore} min — ${nextSlot?.location ?? "check your schedule"}`
       );
     }
 

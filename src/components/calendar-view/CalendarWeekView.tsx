@@ -131,22 +131,22 @@ export function CalendarWeekView({
   return (
     <div ref={containerRef} className="flex flex-col h-full relative">
       {/* Day headers */}
-      <div className="flex border-b border-gray-100 bg-white shrink-0">
+      <div className="flex border-b border-gray-100 dark:border-[#1E2235] bg-white dark:bg-[#1A1D27] shrink-0">
         <div className="w-14 shrink-0" /> {/* spacer for time col */}
         {days.map((day, i) => {
           const today = isToday(day);
           return (
             <div
               key={i}
-              className="flex-1 py-3 text-center cursor-pointer hover:bg-sky-50/50 transition-colors"
+              className="flex-1 py-3 text-center cursor-pointer hover:bg-sky-50/50 dark:hover:bg-[#22263A]/50 transition-colors"
               onClick={() => onNavigateToDate(day)}
             >
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+              <p className="text-xs font-semibold text-gray-400 dark:text-[#8F8F8F] uppercase tracking-wider">
                 {DAY_LABELS[day.getDay()]}
               </p>
               <div
                 className={`mx-auto mt-1 w-8 h-8 flex items-center justify-center rounded-full text-sm font-semibold
-                  ${today ? "bg-blue-600 text-white" : "text-gray-900"}`}
+                  ${today ? "bg-blue-600 text-white" : "text-gray-900 dark:text-[#F5F6F8]"}`}
               >
                 {day.getDate()}
               </div>
@@ -156,14 +156,14 @@ export function CalendarWeekView({
       </div>
 
       {/* Scrollable grid */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto overflow-x-hidden">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto overflow-x-hidden bg-white dark:bg-[#0F1117]">
         <div className="flex" style={{ minHeight: `${TOTAL_PX}px` }}>
           {/* Time labels */}
-          <div className="w-14 shrink-0 relative">
+          <div className="w-14 shrink-0 relative bg-white dark:bg-[#0F1117]">
             {HOURS.map((h) => (
               <div
                 key={h}
-                className="absolute right-2 text-xs text-gray-400"
+                className="absolute right-2 text-xs text-gray-400 dark:text-[#8F8F8F]"
                 style={{ top: `${(h - START_HOUR) * PX_PER_HOUR - 8}px` }}
               >
                 {h === 12
@@ -184,14 +184,14 @@ export function CalendarWeekView({
             return (
               <div
                 key={di}
-                className={`flex-1 relative border-l border-gray-100 overflow-hidden ${today ? "bg-blue-50/30" : ""}`}
+                className={`flex-1 relative border-l border-gray-100 dark:border-[#1E2235] overflow-hidden ${today ? "bg-blue-50/30 dark:bg-blue-900/10" : ""}`}
                 style={{ height: `${TOTAL_PX}px` }}
               >
                 {/* Hour lines */}
                 {HOURS.map((h) => (
                   <div
                     key={h}
-                    className="absolute left-0 right-0 border-t border-gray-100"
+                    className="absolute left-0 right-0 border-t border-gray-100 dark:border-[#1E2235]"
                     style={{ top: `${(h - START_HOUR) * PX_PER_HOUR}px` }}
                   />
                 ))}
@@ -200,7 +200,7 @@ export function CalendarWeekView({
                 {HOURS.map((h) => (
                   <div
                     key={`h-${h}`}
-                    className="absolute left-0 right-0 border-t border-gray-50"
+                    className="absolute left-0 right-0 border-t border-gray-50 dark:border-[#161820]"
                     style={{ top: `${(h - START_HOUR) * PX_PER_HOUR + PX_PER_HOUR / 2}px` }}
                   />
                 ))}
@@ -267,47 +267,47 @@ export function CalendarWeekView({
         const style = EVENT_STYLE[ev.type];
         return (
           <div
-            className="absolute z-50 w-64 bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden"
+            className="absolute z-50 w-64 bg-white dark:bg-[#1A1D27] rounded-xl shadow-lg border border-gray-200 dark:border-[#2E3347] overflow-hidden"
             style={{ left: popoverPos.x, top: popoverPos.y }}
           >
-            <div className="p-3 border-b border-gray-50 flex items-start justify-between">
+            <div className="p-3 border-b border-gray-50 dark:border-[#1E2235] flex items-start justify-between">
               <div>
                 <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${style.pill}`}>
                   {style.label}
                 </span>
-                <h3 className="text-sm font-semibold text-stone-800 mt-1.5 leading-snug">
+                <h3 className="text-sm font-semibold text-[#000000] dark:text-[#F5F6F8] mt-1.5 leading-snug">
                   {ev.title}
                 </h3>
               </div>
               <button
                 onClick={() => onSelectEvent(null)}
-                className="text-stone-400 hover:text-stone-600 text-lg leading-none ml-2"
+                className="text-[#8F8F8F] hover:text-[#464646] dark:hover:text-[#C8C8C8] text-lg leading-none ml-2"
               >
                 ×
               </button>
             </div>
             <div className="p-3 space-y-2">
-              <div className="flex items-center gap-2 text-sm text-stone-600">
-                <span className="text-stone-400">◷</span>
+              <div className="flex items-center gap-2 text-sm text-[#464646] dark:text-[#C8C8C8]">
+                <span className="text-[#8F8F8F]">◷</span>
                 <span>
                   {formatTime(ev.startTime)}
                   {ev.endTime && ev.endTime.getTime() !== ev.startTime.getTime() && ` – ${formatTime(ev.endTime)}`}
                 </span>
               </div>
               {ev.location && (
-                <div className="flex items-center gap-2 text-sm text-stone-600">
-                  <span className="text-stone-400">⌖</span>
+                <div className="flex items-center gap-2 text-sm text-[#464646] dark:text-[#C8C8C8]">
+                  <span className="text-[#8F8F8F]">⌖</span>
                   <span>{ev.location}</span>
                 </div>
               )}
               {ev.host && (
-                <div className="flex items-center gap-2 text-sm text-stone-600">
-                  <span className="text-stone-400">◉</span>
+                <div className="flex items-center gap-2 text-sm text-[#464646] dark:text-[#C8C8C8]">
+                  <span className="text-[#8F8F8F]">◉</span>
                   <span>{ev.host}</span>
                 </div>
               )}
               {ev.description && (
-                <p className="text-xs text-stone-500 pt-1 border-t border-stone-100">
+                <p className="text-xs text-[#8F8F8F] pt-1 border-t border-[#EBEBEB] dark:border-[#1E2235]">
                   {ev.description}
                 </p>
               )}
@@ -319,10 +319,10 @@ export function CalendarWeekView({
                 return (
                   <button
                     onClick={() => onToggleSkip(ev.id)}
-                    className={`text-xs mt-1 pt-1 border-t border-stone-100 w-full text-left ${
+                    className={`text-xs mt-1 pt-1 border-t border-[#EBEBEB] dark:border-[#1E2235] w-full text-left ${
                       effectivelyOff
-                        ? "text-stone-400 hover:text-green-600"
-                        : "text-stone-400 hover:text-red-500"
+                        ? "text-[#8F8F8F] hover:text-green-600"
+                        : "text-[#8F8F8F] hover:text-red-500"
                     }`}
                   >
                     {effectivelyOff ? "Enable travel" : "Skip (no travel)"}

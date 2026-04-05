@@ -1,52 +1,58 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  type ReactNode,
+} from "react";
 
 type Theme = "light" | "dark";
 
 interface ThemeContextValue {
   theme: Theme;
-  toggle: () => void;
+  toggleTheme: () => void;
 }
 
 const ThemeContext = createContext<ThemeContextValue>({
   theme: "light",
-  toggle: () => {},
+  toggleTheme: () => {},
 });
 
-export function useTheme() {
-  return useContext(ThemeContext);
-}
-
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
+export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<Theme>("light");
 
-  // Load from localStorage + system preference on mount
+  // On mount — read saved preference or fall back to system preference
   useEffect(() => {
-    const stored = localStorage.getItem("inbtwn_theme") as Theme | null;
-    if (stored === "dark" || stored === "light") {
-      setTheme(stored);
-    } else if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-      setTheme("dark");
-    }
+    const saved = localStorage.getItem("inbtwn-theme") as Theme | null;
+    const initial: Theme =
+      saved ??
+      (window.matchMedia("(prefers-color-scheme: dark)").matches
+        ? "dark"
+        : "light");
+
+    setTheme(initial);
+    document.documentElement.classList.toggle("dark", initial === "dark");
   }, []);
 
-  // Apply class to <html>
-  useEffect(() => {
-    document.documentElement.classList.toggle("dark", theme === "dark");
-  }, [theme]);
-
-  const toggle = useCallback(() => {
+  const toggleTheme = useCallback(() => {
     setTheme((prev) => {
-      const next = prev === "light" ? "dark" : "light";
-      localStorage.setItem("inbtwn_theme", next);
+      const next: Theme = prev === "light" ? "dark" : "light";
+      localStorage.setItem("inbtwn-theme", next);
+      document.documentElement.classList.toggle("dark", next === "dark");
       return next;
     });
   }, []);
 
   return (
-    <ThemeContext.Provider value={{ theme, toggle }}>
+    <ThemeContext.Provider value={{ theme, toggleTheme }}>
       {children}
     </ThemeContext.Provider>
   );
+}
+
+export function useTheme() {
+  return useContext(ThemeContext);
 }

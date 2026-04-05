@@ -14,25 +14,16 @@ import Link from "next/link";
 
 type Tab = "today" | "classes";
 
-function HeroBanner() {
+function PageGreeting() {
   const { user } = useAuth();
   const name = user?.username
     ? user.username.charAt(0).toUpperCase() + user.username.slice(1)
     : "there";
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#23607C] to-[#1B4457] px-8 py-11 shadow-[0_2px_20px_rgba(27,68,87,0.20)]">
-      <div className="pointer-events-none absolute -right-10 -top-10 h-52 w-52 rounded-full bg-white/[0.06] blur-3xl" />
-      <p className="text-[11px] font-semibold uppercase tracking-[0.09em] text-[#9BBDCC]/70">
-        Welcome back
-      </p>
-      <h1 className="mt-2 text-[2.25rem] font-semibold leading-tight tracking-tight text-white">
-        Hi {name}!
-      </h1>
-      <p className="mt-3 max-w-[26rem] text-[0.9375rem] leading-relaxed text-[#9BBDCC]">
-        Your classes, free time, and upcoming deadlines — all in one place.
-      </p>
-    </div>
+    <p className="text-lg font-semibold text-[#000000] dark:text-[#F5F6F8]">
+      Hi {name}!
+    </p>
   );
 }
 
@@ -47,11 +38,12 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
+
       {/* Travel home base prompt */}
       {showTravelBanner && (
-        <div className="flex flex-wrap items-center gap-3 rounded-xl bg-orange-50 border border-orange-200 px-4 py-3">
-          <span className="text-orange-400 text-lg">🚶</span>
-          <p className="text-sm text-orange-700 flex-1">
+        <div className="flex flex-wrap items-center gap-3 rounded-xl bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 px-4 py-3">
+          <span className="text-orange-500 text-lg">🚶</span>
+          <p className="text-sm text-orange-800 dark:text-orange-300 flex-1">
             Set your residence for walking time estimates between classes.
           </p>
           <select
@@ -59,7 +51,7 @@ export default function DashboardPage() {
             onChange={(e) => {
               if (e.target.value) setHomeBase(e.target.value);
             }}
-            className="text-sm rounded-lg border border-orange-200 bg-white px-2 py-1.5 text-gray-700 focus:outline-none focus:ring-1 focus:ring-orange-400"
+            className="text-sm rounded-lg border border-orange-200 dark:border-orange-700 bg-white dark:bg-[#1A1D27] px-2 py-1.5 text-[#464646] dark:text-[#C8C8C8] focus:outline-none focus:ring-2 focus:ring-orange-400"
           >
             <option value="">Choose residence...</option>
             {ALL_RESIDENCES.map((r) => (
@@ -68,7 +60,7 @@ export default function DashboardPage() {
           </select>
           <button
             onClick={() => setDismissed(true)}
-            className="text-orange-300 hover:text-orange-500 text-sm"
+            className="text-orange-400 hover:text-orange-600 text-sm font-medium"
           >
             Dismiss
           </button>
@@ -78,8 +70,8 @@ export default function DashboardPage() {
       {/* ── Page header ── */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-sky-400 mt-0.5 text-sm">
+          <h1 className="text-2xl font-bold text-[#000000] dark:text-[#F5F6F8]">Dashboard</h1>
+          <p className="text-[#8F8F8F] dark:text-[#8F8F8F] mt-0.5 text-sm">
             {new Date().toLocaleDateString([], {
               weekday: "long",
               month: "long",
@@ -89,24 +81,24 @@ export default function DashboardPage() {
         </div>
         <div className="flex gap-2">
           <Link href="/canvas">
-            <button className="inline-flex items-center justify-center rounded-xl bg-white hover:bg-gray-50 text-gray-600 border border-gray-200 px-4 py-2 text-sm font-medium transition-all">
+            <button className="inline-flex items-center justify-center rounded-lg bg-white dark:bg-[#1A1D27] hover:bg-[#F0F1F5] dark:hover:bg-[#22263A] text-[#464646] dark:text-[#C8C8C8] border border-[#D3D3D3] dark:border-[#2E3347] px-4 py-2 text-sm font-medium transition-all">
               Import from Canvas
             </button>
           </Link>
           <button
             onClick={() => setShowExportPanel(true)}
-            className="inline-flex items-center justify-center rounded-xl bg-white hover:bg-gray-50 text-gray-600 border border-gray-200 px-4 py-2 text-sm font-medium transition-all"
+            className="inline-flex items-center justify-center rounded-lg bg-white dark:bg-[#1A1D27] hover:bg-[#F0F1F5] dark:hover:bg-[#22263A] text-[#464646] dark:text-[#C8C8C8] border border-[#D3D3D3] dark:border-[#2E3347] px-4 py-2 text-sm font-medium transition-all"
           >
             Export to Google
           </button>
         </div>
       </div>
 
-      {/* ── External crawl utility ───────────────────────────────────────────── */}
+      {/* ── External crawl utility ── */}
       <CrawlExternalUrl />
 
-      {/* ── Tabs ─────────────────────────────────────────────────────────────── */}
-      <div className="flex gap-1 border-b border-gray-200">
+      {/* ── Tabs ── */}
+      <div className="flex gap-0 border-b border-[#D3D3D3] dark:border-[#2E3347]">
         {(["today", "classes"] as Tab[]).map((t) => (
           <button
             key={t}
@@ -114,8 +106,8 @@ export default function DashboardPage() {
             className={`px-4 py-2.5 text-sm font-semibold transition-colors border-b-2 -mb-px
               ${
                 tab === t
-                  ? "border-[#1B4457] text-gray-900"
-                  : "border-transparent text-gray-400 hover:text-gray-700 hover:border-gray-300"
+                  ? "border-blue-500 text-[#000000] dark:text-[#F5F6F8]"
+                  : "border-transparent text-[#8F8F8F] hover:text-[#464646] dark:hover:text-[#C8C8C8] hover:border-[#D3D3D3]"
               }`}
           >
             {t === "today" ? "Today" : "My Classes"}
@@ -123,10 +115,10 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      {/* ── Tab content ──────────────────────────────────────────────────────── */}
+      {/* ── Tab content ── */}
       {tab === "today" ? (
-        <div className="space-y-6">
-          <HeroBanner />
+        <div className="space-y-4">
+          <PageGreeting />
           <SmartDayView />
         </div>
       ) : (
@@ -143,14 +135,14 @@ export default function DashboardPage() {
             className="absolute inset-0 bg-black/20 backdrop-blur-sm"
             onClick={() => setShowExportPanel(false)}
           />
-          <div className="relative w-full max-w-lg bg-white dark:bg-gray-900 shadow-2xl overflow-y-auto">
-            <div className="sticky top-0 flex items-center justify-between border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-6 py-4 z-10">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <div className="relative w-full max-w-lg bg-white dark:bg-[#1A1D27] shadow-2xl overflow-y-auto">
+            <div className="sticky top-0 flex items-center justify-between border-b border-[#EBEBEB] dark:border-[#1E2235] bg-white dark:bg-[#1A1D27] px-6 py-4 z-10">
+              <h2 className="text-lg font-semibold text-[#000000] dark:text-[#F5F6F8]">
                 Google Calendar Export
               </h2>
               <button
                 onClick={() => setShowExportPanel(false)}
-                className="rounded-lg p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                className="rounded-lg p-2 text-[#8F8F8F] hover:text-[#464646] hover:bg-[#F0F1F5] dark:hover:bg-[#22263A] transition-colors"
               >
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />

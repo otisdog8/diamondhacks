@@ -105,30 +105,30 @@ export function CalendarDayView({
       {/* Time grid */}
       <div className="flex flex-col flex-1">
         {/* Day header */}
-        <div className="border-b border-stone-100 bg-white px-6 py-3 shrink-0 flex items-center gap-3">
+        <div className="border-b border-stone-100 dark:border-[#1E2235] bg-white dark:bg-[#1A1D27] px-6 py-3 shrink-0 flex items-center gap-3">
           <div
             className={`w-9 h-9 rounded-full flex items-center justify-center text-base font-semibold shrink-0
-              ${today ? "bg-teal-500 text-white" : "text-stone-700 bg-stone-100"}`}
+              ${today ? "bg-[#60CCD4] text-white" : "text-[#464646] dark:text-[#C8C8C8] bg-[#F0F1F5] dark:bg-[#22263A]"}`}
           >
             {currentDate.getDate()}
           </div>
           <div>
-            <p className="text-sm font-semibold text-stone-700">{dayLabel}</p>
-            <p className="text-xs text-stone-400">
+            <p className="text-sm font-semibold text-[#000000] dark:text-[#F5F6F8]">{dayLabel}</p>
+            <p className="text-xs text-[#8F8F8F]">
               {dayEvents.length} event{dayEvents.length !== 1 ? "s" : ""}
             </p>
           </div>
         </div>
 
         {/* Scrollable grid */}
-        <div ref={scrollRef} className="flex-1 overflow-y-auto">
+        <div ref={scrollRef} className="flex-1 overflow-y-auto bg-white dark:bg-[#0F1117]">
           <div className="flex" style={{ minHeight: `${TOTAL_PX}px` }}>
             {/* Time labels */}
-            <div className="w-16 shrink-0 relative">
+            <div className="w-16 shrink-0 relative bg-white dark:bg-[#0F1117]">
               {HOURS.map((h) => (
                 <div
                   key={h}
-                  className="absolute right-3 text-xs text-stone-400"
+                  className="absolute right-3 text-xs text-[#8F8F8F]"
                   style={{ top: `${(h - START_HOUR) * PX_PER_HOUR - 8}px` }}
                 >
                   {h === 12
@@ -142,20 +142,20 @@ export function CalendarDayView({
 
             {/* Event column */}
             <div
-              className={`flex-1 relative border-l border-stone-100 ${today ? "bg-teal-50/10" : ""}`}
+              className={`flex-1 relative border-l border-stone-100 dark:border-[#1E2235] ${today ? "bg-teal-50/10 dark:bg-[#0D2F2F]/20" : ""}`}
               style={{ height: `${TOTAL_PX}px` }}
             >
               {HOURS.map((h) => (
                 <div
                   key={h}
-                  className="absolute left-0 right-0 border-t border-stone-100"
+                  className="absolute left-0 right-0 border-t border-stone-100 dark:border-[#1E2235]"
                   style={{ top: `${(h - START_HOUR) * PX_PER_HOUR}px` }}
                 />
               ))}
               {HOURS.map((h) => (
                 <div
                   key={`h-${h}`}
-                  className="absolute left-0 right-0 border-t border-stone-50"
+                  className="absolute left-0 right-0 border-t border-stone-50 dark:border-[#161820]"
                   style={{ top: `${(h - START_HOUR) * PX_PER_HOUR + PX_PER_HOUR / 2}px` }}
                 />
               ))}
@@ -212,8 +212,8 @@ export function CalendarDayView({
 
       {/* Event detail panel */}
       {selectedEvent && (
-        <div className="w-72 border-l border-stone-100 bg-white flex flex-col shrink-0">
-          <div className="p-4 border-b border-stone-100 flex items-start justify-between">
+        <div className="w-72 border-l border-[#EBEBEB] dark:border-[#1E2235] bg-white dark:bg-[#1A1D27] flex flex-col shrink-0">
+          <div className="p-4 border-b border-[#EBEBEB] dark:border-[#1E2235] flex items-start justify-between">
             <div>
               <span
                 className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
@@ -222,20 +222,20 @@ export function CalendarDayView({
               >
                 {EVENT_STYLE[selectedEvent.type].label}
               </span>
-              <h3 className="text-sm font-semibold text-stone-800 mt-2 leading-snug">
+              <h3 className="text-sm font-semibold text-[#000000] dark:text-[#F5F6F8] mt-2 leading-snug">
                 {selectedEvent.title}
               </h3>
             </div>
             <button
               onClick={() => onSelectEvent(null)}
-              className="text-stone-400 hover:text-stone-600 text-lg leading-none ml-2"
+              className="text-[#8F8F8F] hover:text-[#464646] dark:hover:text-[#C8C8C8] text-lg leading-none ml-2"
             >
               ×
             </button>
           </div>
           <div className="p-4 space-y-3">
-            <div className="flex items-center gap-2 text-sm text-stone-600">
-              <span className="text-stone-400">◷</span>
+            <div className="flex items-center gap-2 text-sm text-[#464646] dark:text-[#C8C8C8]">
+              <span className="text-[#8F8F8F]">◷</span>
               <span>
                 {formatTime(selectedEvent.startTime)}
                 {selectedEvent.endTime &&
@@ -244,25 +244,25 @@ export function CalendarDayView({
               </span>
             </div>
             {selectedEvent.location && (
-              <div className="flex items-center gap-2 text-sm text-stone-600">
-                <span className="text-stone-400">⌖</span>
+              <div className="flex items-center gap-2 text-sm text-[#464646] dark:text-[#C8C8C8]">
+                <span className="text-[#8F8F8F]">⌖</span>
                 <span>{selectedEvent.location}</span>
               </div>
             )}
             {selectedEvent.host && (
-              <div className="flex items-center gap-2 text-sm text-stone-600">
-                <span className="text-stone-400">◉</span>
+              <div className="flex items-center gap-2 text-sm text-[#464646] dark:text-[#C8C8C8]">
+                <span className="text-[#8F8F8F]">◉</span>
                 <span>{selectedEvent.host}</span>
               </div>
             )}
             {selectedEvent.classCode && (
-              <div className="flex items-center gap-2 text-sm text-stone-600">
-                <span className="text-stone-400">◻</span>
+              <div className="flex items-center gap-2 text-sm text-[#464646] dark:text-[#C8C8C8]">
+                <span className="text-[#8F8F8F]">◻</span>
                 <span>{selectedEvent.classCode}</span>
               </div>
             )}
             {selectedEvent.description && (
-              <p className="text-sm text-stone-500 pt-1 border-t border-stone-100">
+              <p className="text-sm text-[#8F8F8F] pt-1 border-t border-[#EBEBEB] dark:border-[#1E2235]">
                 {selectedEvent.description}
               </p>
             )}
@@ -273,10 +273,10 @@ export function CalendarDayView({
               return (
                 <button
                   onClick={() => onToggleSkip(selectedEvent.id)}
-                  className={`text-xs mt-2 pt-2 border-t border-stone-100 w-full text-left ${
+                  className={`text-xs mt-2 pt-2 border-t border-[#EBEBEB] dark:border-[#1E2235] w-full text-left ${
                     effectivelyOff
-                      ? "text-stone-400 hover:text-green-600"
-                      : "text-stone-400 hover:text-red-500"
+                      ? "text-[#8F8F8F] hover:text-green-600"
+                      : "text-[#8F8F8F] hover:text-red-500"
                   }`}
                 >
                   {effectivelyOff ? "Enable travel" : "Skip (no travel)"}
