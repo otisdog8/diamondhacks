@@ -349,33 +349,24 @@ export async function exportTravelEventsToCalendar(
 
             const quarterStart = resolveQuarterStart(cls);
             const weeks = inferQuarterWeeks(cls.term);
-            const firstDateStr = getFirstDayInQuarter(quarterStart, dayOfWeek);
-            const firstDateObj = new Date(firstDateStr + "T00:00:00");
+            const firstDate = getFirstDayInQuarter(quarterStart, dayOfWeek);
 
-            // Create individual travel events per week (not recurring)
-            // because the origin building can vary if office hours or
-            // other non-fixed events are in the sequence
-            for (let week = 0; week < weeks; week++) {
-              const eventDate = new Date(firstDateObj);
-              eventDate.setDate(firstDateObj.getDate() + week * 7);
-              const dateStr = eventDate.toISOString().split("T")[0];
-
-              try {
-                await calendar.events.insert({
-                  calendarId,
-                  requestBody: {
-                    summary: `${fromName} → ${building}`,
-                    description: `${walkMins} min walk`,
-                    colorId: "6",
-                    start: { dateTime: `${dateStr}T${travelStartStr}:00`, timeZone },
-                    end: { dateTime: `${dateStr}T${travelEndStr}:00`, timeZone },
-                  },
-                });
-                eventsCreated++;
-              } catch (err) {
-                const msg = err instanceof Error ? err.message : "Unknown error";
-                errors.push(`Travel to ${building} week ${week + 1}: ${msg}`);
-              }
+            try {
+              await calendar.events.insert({
+                calendarId,
+                requestBody: {
+                  summary: `${fromName} → ${building}`,
+                  description: `${walkMins} min walk`,
+                  colorId: "6",
+                  start: { dateTime: `${firstDate}T${travelStartStr}:00`, timeZone },
+                  end: { dateTime: `${firstDate}T${travelEndStr}:00`, timeZone },
+                  recurrence: [`RRULE:FREQ=WEEKLY;BYDAY=${rruleDay};COUNT=${weeks}`],
+                },
+              });
+              eventsCreated++;
+            } catch (err) {
+              const msg = err instanceof Error ? err.message : "Unknown error";
+              errors.push(`Travel to ${building} on ${rruleDay}: ${msg}`);
             }
           }
         }
