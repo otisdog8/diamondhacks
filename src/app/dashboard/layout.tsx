@@ -9,9 +9,8 @@ import { ThemeToggle } from "@/components/ui/ThemeToggle";
 const NAV_ITEMS = [
   { label: "Today",    href: "/dashboard" },
   { label: "Schedule", href: "/dashboard/schedule" },
-  { label: "Canvas",   href: "/canvas"    },
-  { label: "Calendar", href: "/calendar"  },
-  { label: "Focus",    href: "/focus"     },
+  { label: "Focus",    href: "/focus" },
+  { label: "Settings", href: "/dashboard/settings" },
 ];
 
 export default function DashboardLayout({
@@ -42,7 +41,8 @@ export default function DashboardLayout({
   if (loading || !user) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <div className="h-8 w-8 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
+        <div style={{ width: 32, height: 32, borderRadius: "50%", border: "3px solid #5B6CFF", borderTopColor: "transparent", animation: "spin 0.7s linear infinite" }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
@@ -53,19 +53,23 @@ export default function DashboardLayout({
     <div className="flex-1 flex flex-col min-h-screen bg-[#F5F6F8] dark:bg-[#0F1117]">
 
       {/* ── Header ── */}
-      <header className="sticky top-0 z-10 border-b border-[#EBEBEB] dark:border-[#1E2235] bg-white/95 dark:bg-[#1A1D27]/95 backdrop-blur-sm">
-        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
-
+      <header style={{
+        position: "sticky", top: 0, zIndex: 10,
+        background: "#1F1F2E",
+        borderBottom: "1px solid rgba(255,255,255,0.06)",
+      }}>
+        <div style={{
+          maxWidth: 1200, margin: "0 auto",
+          padding: "0 24px", height: 56,
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+        }}>
           {/* Logo + nav */}
-          <div className="flex items-center gap-6">
-            <Link
-              href="/dashboard"
-              className="flex items-center gap-2 text-sm font-bold text-[#000000] dark:text-[#F5F6F8] tracking-tight"
-            >
-              <span className="flex h-6 w-6 items-center justify-center rounded-md bg-blue-500 text-[11px] font-bold text-white leading-none">
-                i
+          <div style={{ display: "flex", alignItems: "center", gap: 28 }}>
+            <Link href="/dashboard" style={{ textDecoration: "none" }}>
+              <span style={{ fontSize: 20, fontWeight: 800, letterSpacing: -0.5, lineHeight: 1 }}>
+                <span style={{ color: "#5B6CFF" }}>in</span>
+                <span style={{ color: "#F8F9FD" }}>btwn</span>
               </span>
-              inBtwn
             </Link>
 
             <nav style={{ display: "flex", gap: 2 }}>
@@ -74,24 +78,24 @@ export default function DashboardLayout({
                   ? pathname === "/dashboard"
                   : pathname.startsWith(href);
                 return (
-                  <Link
-                    key={label}
-                    href={href}
-                    className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-                      active
-                        ? "bg-[#F0F1F5] text-[#000000] dark:bg-[#22263A] dark:text-[#F5F6F8]"
-                        : "text-[#8F8F8F] hover:bg-[#F5F6F8] hover:text-[#464646] dark:hover:bg-[#22263A] dark:hover:text-[#C8C8C8]"
-                    }`}
-                  >
-                    {label}
+                  <Link key={label} href={href} style={{ textDecoration: "none" }}>
+                    <span style={{
+                      display: "inline-block", padding: "5px 12px", borderRadius: 8,
+                      fontSize: 13, fontWeight: active ? 600 : 400,
+                      color: active ? "#fff" : "rgba(255,255,255,0.45)",
+                      background: active ? "rgba(91,108,255,0.25)" : "transparent",
+                      transition: "all 0.15s",
+                    }}>
+                      {label}
+                    </span>
                   </Link>
                 );
               })}
             </nav>
           </div>
 
-          {/* User controls */}
-          <div className="flex items-center gap-2">
+          {/* Right side */}
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <ThemeToggle />
             <div className="w-px h-4 bg-[#D3D3D3] dark:bg-[#2E3347]" />
 

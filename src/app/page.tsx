@@ -3,7 +3,6 @@
 import { useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
-import { Button } from "@/components/ui/Button";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 export default function Home() {
@@ -16,69 +15,106 @@ export default function Home() {
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <div className="h-8 w-8 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
+        <div style={{ width: 32, height: 32, borderRadius: "50%", border: "3px solid #5B6CFF", borderTopColor: "transparent", animation: "spin 0.7s linear infinite" }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center px-4 py-16 relative">
-      <div className="absolute top-4 right-4">
-        <ThemeToggle />
-      </div>
-      {/* Hero */}
-      <div className="max-w-xl text-center mb-14 animate-fade-up">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-xs font-semibold tracking-widest uppercase mb-5 border border-blue-100 dark:border-blue-800">
-          Student Productivity
+    <div className="flex-1 flex flex-col" style={{ fontFamily: "var(--font-poppins), sans-serif" }}>
+
+      {/* ── Banner hero ── */}
+      <div style={{
+        background: "#1F1F2E",
+        position: "relative",
+        overflow: "hidden",
+        padding: "80px 24px 72px",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        minHeight: 360,
+      }}>
+        {/* Theme toggle */}
+        <div style={{ position: "absolute", top: 16, right: 16 }}>
+          <ThemeToggle />
         </div>
-        <h1 className="text-6xl font-extralight tracking-tight text-[#000000] dark:text-[#F5F6F8] leading-tight">
-          in<span className="font-bold text-blue-500">Btwn</span>
-        </h1>
-        <p className="mt-5 text-lg text-[#8F8F8F] dark:text-[#8F8F8F] font-light leading-relaxed">
+
+        {/* Background glows */}
+        <div style={{ position: "absolute", top: -80, left: -80, width: 400, height: 400, borderRadius: "50%", background: "#5B6CFF", opacity: 0.07, filter: "blur(60px)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", bottom: -80, right: -80, width: 400, height: 400, borderRadius: "50%", background: "#9C8CFF", opacity: 0.07, filter: "blur(60px)", pointerEvents: "none" }} />
+
+        {/* Logo wordmark */}
+        <div style={{ position: "relative", marginBottom: 24, textAlign: "center" }}>
+          <span style={{ fontSize: 72, fontWeight: 800, letterSpacing: -3, lineHeight: 1 }}>
+            <span style={{ color: "#5B6CFF" }}>in</span>
+            <span style={{ color: "#F8F9FD" }}>btwn</span>
+          </span>
+          <p style={{ marginTop: 8, fontSize: 11, fontWeight: 400, letterSpacing: 5, color: "#6A6A80", textTransform: "uppercase" }}>
+            Schedule Smarter
+          </p>
+        </div>
+
+        {/* Tagline */}
+        <p style={{ color: "#6A6A80", fontSize: 16, fontWeight: 400, maxWidth: 440, textAlign: "center", lineHeight: 1.7, marginBottom: 36 }}>
           A calm, intelligent schedule companion.<br />
           Import your Canvas classes. Own your time.
         </p>
 
         {/* CTAs */}
-        <div className="flex gap-3 justify-center mt-8">
+        <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
           <Link href="/register">
-            <Button>Get started free</Button>
+            <button style={{
+              padding: "12px 28px", borderRadius: 10, fontSize: 14, fontWeight: 700,
+              background: "#5B6CFF", color: "#fff", border: "none", cursor: "pointer",
+              fontFamily: "inherit", transition: "opacity 0.15s",
+            }}
+              onMouseEnter={e => (e.currentTarget.style.opacity = "0.85")}
+              onMouseLeave={e => (e.currentTarget.style.opacity = "1")}
+            >
+              Get started free
+            </button>
           </Link>
           <Link href="/login">
-            <Button variant="secondary">Sign in</Button>
+            <button style={{
+              padding: "12px 28px", borderRadius: 10, fontSize: 14, fontWeight: 600,
+              background: "rgba(255,255,255,0.07)", color: "#F8F9FD",
+              border: "1px solid rgba(255,255,255,0.1)", cursor: "pointer",
+              fontFamily: "inherit", transition: "background 0.15s",
+            }}
+              onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.13)")}
+              onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.07)")}
+            >
+              Sign in
+            </button>
           </Link>
         </div>
       </div>
 
-      {/* Feature cards */}
-      <div className="grid gap-4 sm:grid-cols-3 max-w-2xl w-full animate-fade-up">
-        {[
-          {
-            step: "01",
-            title: "Connect Canvas",
-            desc: "Log in once through a secure browser session. Your credentials never leave your device.",
-          },
-          {
-            step: "02",
-            title: "Import Classes",
-            desc: "AI navigates your Canvas courses and extracts your full schedule automatically.",
-          },
-          {
-            step: "03",
-            title: "Own Your Day",
-            desc: "See your week at a glance, find focus windows, and export directly to Google Calendar.",
-          },
-        ].map(({ step, title, desc }) => (
-          <div
-            key={step}
-            className="bg-white dark:bg-[#1A1D27] border border-[#EBEBEB] dark:border-[#1E2235] rounded-xl p-5 text-left shadow-sm"
-          >
-            <span className="text-xs font-bold text-blue-400 dark:text-blue-400 tracking-widest">{step}</span>
-            <h3 className="mt-2 text-sm font-semibold text-[#000000] dark:text-[#F5F6F8]">{title}</h3>
-            <p className="mt-1.5 text-sm text-[#8F8F8F] dark:text-[#8F8F8F] leading-relaxed">{desc}</p>
-          </div>
-        ))}
+      {/* ── Feature cards ── */}
+      <div className="bg-[#F5F6F8] dark:bg-[#0F1117] flex-1" style={{ padding: "56px 24px" }}>
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+          gap: 16,
+          maxWidth: 720,
+          margin: "0 auto",
+        }}>
+          {[
+            { step: "01", color: "#5B6CFF", title: "Connect Canvas", desc: "Log in once through a secure browser session. Your credentials never leave your device." },
+            { step: "02", color: "#9C8CFF", title: "Import Classes", desc: "AI navigates your Canvas courses and extracts your full schedule automatically." },
+            { step: "03", color: "#FFB020", title: "Own Your Day", desc: "See your week at a glance, track assignments, and export directly to Google Calendar." },
+          ].map(({ step, color, title, desc }) => (
+            <div key={step} className="bg-white dark:bg-[#1A1D27] border border-[#EBEBEB] dark:border-[#1E2235]" style={{ borderRadius: 16, padding: "24px 20px", boxShadow: "0 1px 4px rgba(31,31,46,0.05)" }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color, letterSpacing: 2 }}>{step}</span>
+              <h3 className="text-[#000000] dark:text-[#F5F6F8]" style={{ marginTop: 8, fontSize: 15, fontWeight: 700 }}>{title}</h3>
+              <p style={{ marginTop: 6, fontSize: 13, color: "#8F8F8F", lineHeight: 1.65 }}>{desc}</p>
+            </div>
+          ))}
+        </div>
       </div>
+
     </div>
   );
 }
