@@ -142,15 +142,22 @@ export function CrawlExternalUrl() {
     startPolling(state.scrapeSessionId);
   };
 
+  const [discarding, setDiscarding] = useState(false);
+
   const handleDiscard = async () => {
-    stopPolling();
-    await fetch("/api/canvas/connect", { method: "DELETE" });
-    setState({
-      status: "idle", scrapeSessionId: null, liveUrl: null,
-      stepCount: 0, lastStepSummary: "", classesFound: 0, rawOutput: "", error: "",
-    });
-    setUrl("");
-    setExpanded(false);
+    setDiscarding(true);
+    try {
+      stopPolling();
+      await fetch("/api/canvas/connect", { method: "DELETE" });
+      setState({
+        status: "idle", scrapeSessionId: null, liveUrl: null,
+        stepCount: 0, lastStepSummary: "", classesFound: 0, rawOutput: "", error: "",
+      });
+      setUrl("");
+      setExpanded(false);
+    } finally {
+      setDiscarding(false);
+    }
   };
 
   // ── Crawling ──
@@ -167,7 +174,9 @@ export function CrawlExternalUrl() {
               <p className="text-xs text-gray-400">Step {state.stepCount}</p>
             )}
           </div>
-          <Button variant="ghost" size="sm" onClick={handleDiscard}>Cancel</Button>
+          <Button variant="ghost" size="sm" onClick={handleDiscard} disabled={discarding}>
+            {discarding ? <><span className="inline-block h-3 w-3 rounded-full border-2 border-current border-t-transparent animate-spin mr-1.5" />Cancelling...</> : "Cancel"}
+          </Button>
         </div>
         {state.liveUrl && (
           <details>
@@ -195,7 +204,9 @@ export function CrawlExternalUrl() {
         )}
         <div className="flex gap-2">
           <Button size="sm" onClick={handleResume}>I&apos;ve Logged In — Continue</Button>
-          <Button size="sm" variant="ghost" onClick={handleDiscard}>Cancel</Button>
+          <Button size="sm" variant="ghost" onClick={handleDiscard} disabled={discarding}>
+            {discarding ? <><span className="inline-block h-3 w-3 rounded-full border-2 border-current border-t-transparent animate-spin mr-1.5" />Cancelling...</> : "Cancel"}
+          </Button>
         </div>
       </Card>
     );
@@ -213,7 +224,9 @@ export function CrawlExternalUrl() {
             {state.classesFound > 0 && (
               <Button size="sm" onClick={handleConfirm}>Save Results</Button>
             )}
-            <Button size="sm" variant="ghost" onClick={handleDiscard}>Discard</Button>
+            <Button size="sm" variant="ghost" onClick={handleDiscard} disabled={discarding}>
+              {discarding ? <><span className="inline-block h-3 w-3 rounded-full border-2 border-current border-t-transparent animate-spin mr-1.5" />Discarding...</> : "Discard"}
+            </Button>
           </div>
         </div>
         {state.rawOutput && (

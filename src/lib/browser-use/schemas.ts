@@ -19,7 +19,7 @@ export const ScrapedCourseSchema = z.object({
   quarterEndDate: z.string().optional().describe("Last day of instruction for this term, ISO format YYYY-MM-DD if found"),
   syllabusText: z.string().optional().describe("Full syllabus text if available"),
   syllabusUrl: z.string().optional().describe("URL to syllabus"),
-  externalLinks: z.array(z.string()).describe("All external links found"),
+  externalLinks: z.array(z.string()).describe("All external links found — must be full URLs starting with http:// or https://, not just names like 'Piazza'"),
   description: z.string().optional().describe("Course description"),
   rawNotes: z.string().describe("Any additional information found - over-document everything"),
 });

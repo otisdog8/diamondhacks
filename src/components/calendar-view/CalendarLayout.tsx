@@ -46,9 +46,13 @@ function classesToCalendarEvents(
     const weeks = inferQuarterWeeks(cls.term);
 
     for (const slot of cls.schedule) {
-      const type: EventType = slot.type?.toLowerCase().includes("lab")
+      // Skip one-time events (finals, midterms) — they aren't weekly recurring
+      const slotType = slot.type?.toLowerCase() ?? "";
+      if (slotType === "final" || slotType === "midterm") continue;
+
+      const type: EventType = slotType.includes("lab")
         ? "lab"
-        : slot.type?.toLowerCase().includes("disc")
+        : slotType.includes("disc")
         ? "discussion"
         : "lecture";
 

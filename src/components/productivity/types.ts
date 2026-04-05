@@ -10,6 +10,14 @@ export interface ClassEvent {
   type?: string;
 }
 
+/** Types that are one-time events, not weekly recurring */
+const ONE_TIME_TYPES = new Set(["final", "midterm"]);
+
+function isRecurring(type?: string): boolean {
+  if (!type) return true;
+  return !ONE_TIME_TYPES.has(type.toLowerCase());
+}
+
 function parseTimeStr(timeStr: string, base: Date): Date {
   const match = timeStr.trim().match(/^(\d+):(\d+)\s*(am|pm)?$/i);
   if (!match) return base;
@@ -30,7 +38,7 @@ export function getTodaysEvents(classes: ClassInfo[]): ClassEvent[] {
 
   classes.forEach((cls) => {
     cls.schedule.forEach((slot, i) => {
-      if (slot.dayOfWeek === dow) {
+      if (slot.dayOfWeek === dow && isRecurring(slot.type)) {
         events.push({
           id: `${cls.id}-${i}`,
           code: cls.code,
@@ -65,7 +73,7 @@ export function getNextClassDay(classes: ClassInfo[]): { dayName: string; events
     const events: ClassEvent[] = [];
     classes.forEach((cls) => {
       cls.schedule.forEach((slot, i) => {
-        if (slot.dayOfWeek === checkDow) {
+        if (slot.dayOfWeek === checkDow && isRecurring(slot.type)) {
           events.push({
             id: `${cls.id}-${i}`,
             code: cls.code,

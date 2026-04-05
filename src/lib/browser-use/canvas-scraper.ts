@@ -72,7 +72,8 @@ const SCRAPE_PROMPT = (canvasUrl: string) => `You are on Canvas LMS at ${canvasU
 
 1. Go to the Dashboard or Courses page and find ALL current/active courses
 2. For EACH course, navigate into it and extract:
-   - Course name, course code, instructor name, term/semester
+   - Course name and course code (e.g. "CSE 110", "COGS 13" — the short department + number code, NOT the full name)
+   - Instructor name, term/semester
    - Full schedule: days of week, start/end times, locations
    - Check the Syllabus page for schedule details, office hours, and any links
    - Check the Modules page for any external links or resources
@@ -81,19 +82,37 @@ const SCRAPE_PROMPT = (canvasUrl: string) => `You are on Canvas LMS at ${canvasU
    - Check the Canvas calendar, academic calendar link, syllabus, or any "Important Dates" section
    - Extract the first day of instruction and last day of instruction for the current term
    - Return these as quarterStartDate and quarterEndDate in YYYY-MM-DD format
-4. Follow ALL external links you find (up to 2 clicks deep) to gather more info
+4. If a course is still missing concrete times, locations, or section info after checking Canvas and
+   the course website/syllabus, try the UCSD Schedule of Classes:
+   - Navigate to https://act.ucsd.edu/scheduleOfClasses/scheduleOfClassesStudent.htm
+   - Use the COURSE CODE SEARCH specifically: enter the department prefix (e.g. "CSE") in the Subject Area
+     field and the course number (e.g. "110") in the Course Number field. Select the correct quarter
+     (e.g. "SP26" for Spring 2026). Then submit the search.
+   - Do NOT use free-text search or browse by department — use the specific subject + number fields.
+   - Extract lecture, discussion, and lab section times, locations, and instructors from the results.
+   - If you can't find the course after a couple of attempts, move on and return what you have.
+5. Follow ALL external links you find (up to 2 clicks deep) to gather more info
    - Some classes host content on Piazza, Ed Discussion, Gradescope, personal websites, etc.
    - CRITICAL: You MUST actually CLICK links/buttons on the page rather than navigating to URLs directly.
      Canvas uses SSO passthrough — clicking a Piazza/Gradescope/Ed link FROM a Canvas page will
      automatically authenticate you. Navigating to the URL directly will NOT work and will show a login page.
      Always click the link element on the page, never use direct URL navigation for external tools.
    - Extract any schedule, office hours, or meeting info from these sites
-5. OVER-DOCUMENT: capture everything you find, even if it seems minor
+6. OVER-DOCUMENT: capture everything you find, even if it seems minor
+
+SCHEDULE ENTRY RULES — pay close attention to the "type" and "dayOfWeek" fields:
+- "type" must be one of: "lecture", "discussion", "lab", "office_hours", "final", "midterm", "other"
+- Regular weekly classes (lectures, discussions, labs) should have a SPECIFIC single day like "Monday", "Tuesday", etc.
+  If a class meets on multiple days (e.g. TuTh), create SEPARATE schedule entries for EACH day.
+- Finals and midterms are ONE-TIME events — still include them but mark type as "final" or "midterm".
+- "dayOfWeek" must be a single standard day name: "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", or "Sunday".
+  Do NOT use compound values like "varies", "TuTh", "MWF", or "varies (TuTh or WF)". If the day varies or is unknown, OMIT that schedule entry entirely.
+- "startTime" and "endTime" must be in 24-hour format like "14:00" or "09:00". Do NOT use "varies" — if the time is unknown, omit the entry.
 
 IMPORTANT: If you encounter a login page on ANY site (including Canvas SSO), STOP immediately and return what you have so far as JSON. Do NOT try to log in yourself — the user will handle that.
 
 CRITICAL: Your FINAL response must be ONLY the JSON object below — no other text, no file saving, no workspace operations. Just output the raw JSON directly as your response:
-{ "courses": [{ "canvasId": "...", "name": "...", "code": "...", "instructor": "...", "term": "...", "quarterStartDate": "2026-03-30", "quarterEndDate": "2026-06-06", "schedule": [{"dayOfWeek": "Monday", "startTime": "14:00", "endTime": "15:20", "location": "WLH 2001", "type": "lecture"}], "syllabusText": "...", "syllabusUrl": "...", "externalLinks": ["..."], "description": "...", "rawNotes": "everything else you found" }] }
+{ "courses": [{ "canvasId": "74024", "name": "Field Methods: Cognition in the Wild", "code": "COGS 13", "instructor": "Federico Rossano", "term": "Spring 2026", "quarterStartDate": "2026-03-30", "quarterEndDate": "2026-06-06", "schedule": [{"dayOfWeek": "Tuesday", "startTime": "12:30", "endTime": "13:50", "location": "PETER 108", "type": "lecture"}, {"dayOfWeek": "Thursday", "startTime": "12:30", "endTime": "13:50", "location": "PETER 108", "type": "lecture"}, {"dayOfWeek": "Monday", "startTime": "08:00", "endTime": "10:59", "location": "PETER 108", "type": "final"}], "syllabusText": "...", "syllabusUrl": "https://...", "externalLinks": ["https://piazza.com/class/abc123"], "description": "...", "rawNotes": "everything else you found" }] }
 
 Do NOT save to a file. Do NOT use workspace. Return the JSON directly in your output.`;
 
@@ -109,10 +128,26 @@ const DEEPER_PROMPT = (canvasUrl: string) => `You previously scraped Canvas at $
 4. Look for meeting patterns in assignment due dates and discussion sections
 5. Check the Canvas calendar view for any scheduled events
 6. Look at announcement pages for schedule changes or room updates
+7. If any courses are still missing concrete times, locations, or section info after all the above,
+   try the UCSD Schedule of Classes:
+   - Navigate to https://act.ucsd.edu/scheduleOfClasses/scheduleOfClassesStudent.htm
+   - Use the COURSE CODE SEARCH specifically: enter the department prefix (e.g. "CSE") in the Subject Area
+     field and the course number (e.g. "110") in the Course Number field. Select the correct quarter
+     (e.g. "SP26" for Spring 2026). Then submit the search.
+   - Do NOT use free-text search or browse by department — use the specific subject + number fields.
+   - Extract lecture, discussion, and lab section times, locations, and instructors.
+   - If you can't find the course after a couple of attempts, move on and return what you have.
+
+SCHEDULE ENTRY RULES:
+- "type" must be one of: "lecture", "discussion", "lab", "office_hours", "final", "midterm", "other"
+- Each schedule entry must have a SINGLE day name: "Monday", "Tuesday", etc. — NOT "TuTh", "MWF", or "varies".
+  For multi-day classes, create separate entries per day.
+- "startTime"/"endTime" must be 24h format like "14:00". Omit entries where times are unknown.
+- Finals/midterms: include with type "final"/"midterm" — these are one-time events, not weekly.
 
 Return ALL data as JSON in your output. Include everything you found previously plus new discoveries.
 CRITICAL: Your FINAL response must be ONLY the JSON object — no file saving, no workspace. Format:
-{ "courses": [{ "canvasId": "...", "name": "...", "code": "...", "instructor": "...", "term": "...", "quarterStartDate": "2026-03-30", "quarterEndDate": "2026-06-06", "schedule": [{"dayOfWeek": "Monday", "startTime": "14:00", "endTime": "15:20", "location": "WLH 2001", "type": "lecture"}], "syllabusText": "...", "syllabusUrl": "...", "externalLinks": ["..."], "description": "...", "rawNotes": "everything else you found" }] }`;
+{ "courses": [{ "canvasId": "74024", "name": "Field Methods: Cognition in the Wild", "code": "COGS 13", "instructor": "...", "term": "Spring 2026", "quarterStartDate": "2026-03-30", "quarterEndDate": "2026-06-06", "schedule": [{"dayOfWeek": "Tuesday", "startTime": "12:30", "endTime": "13:50", "location": "PETER 108", "type": "lecture"}], "syllabusText": "...", "syllabusUrl": "https://...", "externalLinks": ["https://piazza.com/class/abc123"], "description": "...", "rawNotes": "everything else you found" }] }`;
 
 const EXTERNAL_URL_PROMPT = (externalUrl: string) => `The user wants you to crawl an external class website to extract course information.
 
@@ -129,7 +164,7 @@ Extract ALL information you can find about courses/classes on this site:
 If the site requires login, STOP and return what the page shows — the user will log in manually.
 
 CRITICAL: Return ONLY a JSON object as your final output — no file saving, no workspace:
-{ "courses": [{ "canvasId": "external", "name": "...", "code": "...", "instructor": "...", "term": "...", "schedule": [{"dayOfWeek": "Monday", "startTime": "14:00", "endTime": "15:20", "location": "...", "type": "lecture"}], "syllabusText": "...", "syllabusUrl": "${externalUrl}", "externalLinks": ["..."], "description": "...", "rawNotes": "everything else you found" }] }`;
+{ "courses": [{ "canvasId": "external", "name": "...", "code": "...", "instructor": "...", "term": "...", "schedule": [{"dayOfWeek": "Monday", "startTime": "14:00", "endTime": "15:20", "location": "...", "type": "lecture"}], "syllabusText": "...", "syllabusUrl": "${externalUrl}", "externalLinks": ["https://piazza.com/class/abc123"], "description": "...", "rawNotes": "everything else you found" }] }`;
 
 /**
  * Step 2: Scrape using the SAME session the user logged into.

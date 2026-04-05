@@ -54,7 +54,8 @@ function getSessionsForDay(
   const sessions: Omit<Session, "conflict">[] = [];
   classes.forEach((cls) => {
     cls.schedule.forEach((slot) => {
-      if (slot.dayOfWeek === dayIndex) {
+      const t = slot.type?.toLowerCase() ?? "";
+      if (slot.dayOfWeek === dayIndex && t !== "final" && t !== "midterm") {
         sessions.push({
           cls,
           location: slot.location,

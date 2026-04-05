@@ -1,18 +1,39 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
 import { BrowserFrame } from "./BrowserFrame";
 import { useBrowserSession } from "@/hooks/useBrowserSession";
 
+function BackButton() {
+  return (
+    <Link
+      href="/dashboard"
+      className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors mb-4"
+    >
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M19 12H5" /><path d="M12 19l-7-7 7-7" />
+      </svg>
+      Back to Dashboard
+    </Link>
+  );
+}
+
 export function ConnectionWizard() {
   const [canvasUrl, setCanvasUrl] = useState("https://canvas.ucsd.edu");
   const [showUrlInput, setShowUrlInput] = useState(false);
   const [externalUrl, setExternalUrl] = useState("");
   const [showCrawlInput, setShowCrawlInput] = useState(false);
+  const [discarding, setDiscarding] = useState(false);
   const session = useBrowserSession("canvas");
+
+  const handleDiscard = async () => {
+    setDiscarding(true);
+    try { await session.discard(); } finally { setDiscarding(false); }
+  };
 
   const handleConnect = async () => {
     try { await session.connect({ canvasUrl }); } catch { /* hook handles error */ }
@@ -40,6 +61,7 @@ export function ConnectionWizard() {
   if (session.status === "idle") {
     return (
       <div className="space-y-6">
+        <BackButton />
         <div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
             Import from Canvas
@@ -82,6 +104,7 @@ export function ConnectionWizard() {
   if (session.status === "connecting") {
     return (
       <div className="space-y-6">
+        <BackButton />
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
           Connecting to Canvas...
         </h2>
@@ -104,8 +127,8 @@ export function ConnectionWizard() {
             The AI agent is navigating to Canvas. A login screen will appear shortly.
           </p>
         </Card>
-        <Button variant="ghost" size="sm" onClick={session.discard}>
-          Cancel
+        <Button variant="ghost" size="sm" onClick={handleDiscard} disabled={discarding}>
+          {discarding ? <><span className="inline-block h-3 w-3 rounded-full border-2 border-current border-t-transparent animate-spin mr-1.5" />Cancelling...</> : "Cancel"}
         </Button>
       </div>
     );
@@ -115,6 +138,7 @@ export function ConnectionWizard() {
   if (session.status === "awaiting_login") {
     return (
       <div className="space-y-6">
+        <BackButton />
         <div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
             Log into Canvas
@@ -132,8 +156,8 @@ export function ConnectionWizard() {
           <Button onClick={handleConfirmLogin} size="lg">
             I&apos;m Logged In - Start Import
           </Button>
-          <Button variant="danger" size="sm" onClick={session.discard}>
-            Discard Session
+          <Button variant="danger" size="sm" onClick={handleDiscard} disabled={discarding}>
+            {discarding ? <><span className="inline-block h-3 w-3 rounded-full border-2 border-current border-t-transparent animate-spin mr-1.5" />Discarding...</> : "Discard Session"}
           </Button>
         </div>
       </div>
@@ -144,6 +168,7 @@ export function ConnectionWizard() {
   if (session.status === "scraping") {
     return (
       <div className="space-y-6">
+        <BackButton />
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
           Importing Classes...
         </h2>
@@ -182,6 +207,7 @@ export function ConnectionWizard() {
   if (session.status === "needs_login") {
     return (
       <div className="space-y-6">
+        <BackButton />
         <div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
             Login Required
@@ -213,8 +239,8 @@ export function ConnectionWizard() {
           <Button variant="secondary" size="sm" onClick={handleConfirmLogin}>
             Skip External Sites
           </Button>
-          <Button variant="danger" size="sm" onClick={session.discard}>
-            Cancel
+          <Button variant="danger" size="sm" onClick={handleDiscard} disabled={discarding}>
+            {discarding ? <><span className="inline-block h-3 w-3 rounded-full border-2 border-current border-t-transparent animate-spin mr-1.5" />Cancelling...</> : "Cancel"}
           </Button>
         </div>
       </div>
@@ -226,6 +252,7 @@ export function ConnectionWizard() {
     const hasResults = (session.classesFound ?? 0) > 0;
     return (
       <div className="space-y-6">
+        <BackButton />
         <div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
             Review Scrape Results
@@ -337,8 +364,8 @@ export function ConnectionWizard() {
               Crawl External URL
             </Button>
           )}
-          <Button variant="ghost" onClick={session.discard}>
-            Discard &amp; Start Over
+          <Button variant="ghost" onClick={handleDiscard} disabled={discarding}>
+            {discarding ? <><span className="inline-block h-3 w-3 rounded-full border-2 border-current border-t-transparent animate-spin mr-1.5" />Discarding...</> : "Discard & Start Over"}
           </Button>
         </div>
       </div>
@@ -349,6 +376,7 @@ export function ConnectionWizard() {
   if (session.status === "completed") {
     return (
       <div className="space-y-6">
+        <BackButton />
         <Card className="py-8 text-center space-y-3 border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20">
           <div className="mx-auto h-12 w-12 rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center">
             <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -374,8 +402,8 @@ export function ConnectionWizard() {
           <Button variant="secondary" onClick={() => (window.location.href = "/calendar")}>
             Export to Calendar
           </Button>
-          <Button variant="ghost" onClick={session.discard}>
-            Import Again
+          <Button variant="ghost" onClick={handleDiscard} disabled={discarding}>
+            {discarding ? <><span className="inline-block h-3 w-3 rounded-full border-2 border-current border-t-transparent animate-spin mr-1.5" />Resetting...</> : "Import Again"}
           </Button>
         </div>
       </div>
@@ -386,6 +414,7 @@ export function ConnectionWizard() {
   if (session.status === "failed") {
     return (
       <div className="space-y-6">
+        <BackButton />
         <Card className="py-8 text-center space-y-3 border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20">
           <div className="mx-auto h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/40 flex items-center justify-center">
             <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -401,7 +430,9 @@ export function ConnectionWizard() {
         </Card>
         <div className="flex justify-center gap-3">
           <Button onClick={handleConnect}>Try Again</Button>
-          <Button variant="ghost" onClick={session.discard}>Start Fresh</Button>
+          <Button variant="ghost" onClick={handleDiscard} disabled={discarding}>
+            {discarding ? <><span className="inline-block h-3 w-3 rounded-full border-2 border-current border-t-transparent animate-spin mr-1.5" />Resetting...</> : "Start Fresh"}
+          </Button>
         </div>
       </div>
     );
