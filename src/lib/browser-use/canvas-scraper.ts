@@ -117,17 +117,13 @@ SCHEDULE ENTRY RULES — pay close attention to the "type" and "dayOfWeek" field
 
 IMPORTANT: If you encounter a login page on ANY site (including Canvas SSO), STOP immediately and return what you have so far as JSON. Do NOT try to log in yourself — the user will handle that.
 
-OUTPUT RULES — YOU MUST FOLLOW ALL OF THESE:
-1. You MUST return a JSON object as your final output. This is mandatory and non-negotiable.
-2. You MUST NOT save JSON to a file. Do NOT use save_file, write_file, or any workspace/file operation.
-3. You MUST NOT create, write, or save ANY files whatsoever. No .json files, no .txt files, nothing.
-4. Your output MUST be the raw JSON text returned directly in your response message — not saved anywhere.
-5. Do NOT wrap the JSON in markdown code blocks. Just output the raw JSON.
+OUTPUT RULES:
+1. Your final result MUST be a JSON object in the format shown below.
+2. Do NOT save the JSON to a file. Do NOT use save_file, write_file, or any workspace/file operation.
+3. Do NOT create any files. Return the JSON as your task result.
 
-The JSON format MUST be exactly:
-{ "courses": [{ "canvasId": "74024", "name": "Field Methods: Cognition in the Wild", "code": "COGS 13", "instructor": "Federico Rossano", "term": "Spring 2026", "quarterStartDate": "2026-03-30", "quarterEndDate": "2026-06-06", "schedule": [{"dayOfWeek": "Tuesday", "startTime": "12:30", "endTime": "13:50", "location": "PETER 108", "type": "lecture"}, {"dayOfWeek": "Wednesday", "startTime": "14:00", "endTime": "15:00", "location": "CSE 4258", "type": "office_hours", "host": "Prof. Rossano"}, {"dayOfWeek": "Monday", "startTime": "08:00", "endTime": "10:59", "location": "PETER 108", "type": "final"}], "assignments": [{"id": "12345", "title": "Essay 1", "dueDate": "2026-04-26", "points": 100, "type": "essay"}, {"id": "12346", "title": "Final Exam", "dueDate": "2026-06-08", "points": 200, "type": "exam"}], "syllabusText": "...", "syllabusUrl": "https://...", "externalLinks": ["https://piazza.com/class/abc123"], "description": "...", "rawNotes": "everything else you found" }] }
-
-REMEMBER: Return JSON in your response. Do NOT save to file. Do NOT use workspace.`;
+JSON format:
+{ "courses": [{ "canvasId": "74024", "name": "Field Methods: Cognition in the Wild", "code": "COGS 13", "instructor": "Federico Rossano", "term": "Spring 2026", "quarterStartDate": "2026-03-30", "quarterEndDate": "2026-06-06", "schedule": [{"dayOfWeek": "Tuesday", "startTime": "12:30", "endTime": "13:50", "location": "PETER 108", "type": "lecture"}, {"dayOfWeek": "Wednesday", "startTime": "14:00", "endTime": "15:00", "location": "CSE 4258", "type": "office_hours", "host": "Prof. Rossano"}, {"dayOfWeek": "Monday", "startTime": "08:00", "endTime": "10:59", "location": "PETER 108", "type": "final"}], "assignments": [{"id": "12345", "title": "Essay 1", "dueDate": "2026-04-26", "points": 100, "type": "essay"}, {"id": "12346", "title": "Final Exam", "dueDate": "2026-06-08", "points": 200, "type": "exam"}], "syllabusText": "...", "syllabusUrl": "https://...", "externalLinks": ["https://piazza.com/class/abc123"], "description": "...", "rawNotes": "everything else you found" }] }`;
 
 const DEEPER_PROMPT = (canvasUrl: string) => `You previously scraped Canvas at ${canvasUrl} but the user wants more thorough results. Search harder:
 
@@ -168,17 +164,13 @@ SCHEDULE ENTRY RULES:
 
 Include everything you found previously plus new discoveries.
 
-OUTPUT RULES — YOU MUST FOLLOW ALL OF THESE:
-1. You MUST return a JSON object as your final output. This is mandatory and non-negotiable.
-2. You MUST NOT save JSON to a file. Do NOT use save_file, write_file, or any workspace/file operation.
-3. You MUST NOT create, write, or save ANY files whatsoever. No .json files, no .txt files, nothing.
-4. Your output MUST be the raw JSON text returned directly in your response message — not saved anywhere.
-5. Do NOT wrap the JSON in markdown code blocks. Just output the raw JSON.
+OUTPUT RULES:
+1. Your final result MUST be a JSON object in the format shown below.
+2. Do NOT save the JSON to a file. Do NOT use save_file, write_file, or any workspace/file operation.
+3. Do NOT create any files. Return the JSON as your task result.
 
-The JSON format MUST be exactly:
-{ "courses": [{ "canvasId": "74024", "name": "Field Methods: Cognition in the Wild", "code": "COGS 13", "instructor": "...", "term": "Spring 2026", "quarterStartDate": "2026-03-30", "quarterEndDate": "2026-06-06", "schedule": [{"dayOfWeek": "Tuesday", "startTime": "12:30", "endTime": "13:50", "location": "PETER 108", "type": "lecture"}, {"dayOfWeek": "Wednesday", "startTime": "14:00", "endTime": "15:00", "location": "CSE 4258", "type": "office_hours", "host": "Prof. Rossano"}], "assignments": [{"id": "12345", "title": "Essay 1", "dueDate": "2026-04-26", "points": 100, "type": "essay"}], "syllabusText": "...", "syllabusUrl": "https://...", "externalLinks": ["https://piazza.com/class/abc123"], "description": "...", "rawNotes": "everything else you found" }] }
-
-REMEMBER: Return JSON in your response. Do NOT save to file. Do NOT use workspace.`;
+JSON format:
+{ "courses": [{ "canvasId": "74024", "name": "Field Methods: Cognition in the Wild", "code": "COGS 13", "instructor": "...", "term": "Spring 2026", "quarterStartDate": "2026-03-30", "quarterEndDate": "2026-06-06", "schedule": [{"dayOfWeek": "Tuesday", "startTime": "12:30", "endTime": "13:50", "location": "PETER 108", "type": "lecture"}, {"dayOfWeek": "Wednesday", "startTime": "14:00", "endTime": "15:00", "location": "CSE 4258", "type": "office_hours", "host": "Prof. Rossano"}], "assignments": [{"id": "12345", "title": "Essay 1", "dueDate": "2026-04-26", "points": 100, "type": "essay"}], "syllabusText": "...", "syllabusUrl": "https://...", "externalLinks": ["https://piazza.com/class/abc123"], "description": "...", "rawNotes": "everything else you found" }] }`;
 
 const EXTERNAL_URL_PROMPT = (externalUrl: string) => `The user wants you to crawl an external class website to extract course information.
 
@@ -212,17 +204,13 @@ SCHEDULE ENTRY RULES:
 - "location" must use the SHORT campus building code + room number, e.g. "WLH 2001", "PETER 108", "CSE 4258". Do NOT use full addresses.
 - Finals/midterms: include with type "final"/"midterm".
 
-OUTPUT RULES — YOU MUST FOLLOW ALL OF THESE:
-1. You MUST return a JSON object as your final output. This is mandatory and non-negotiable.
-2. You MUST NOT save JSON to a file. Do NOT use save_file, write_file, or any workspace/file operation.
-3. You MUST NOT create, write, or save ANY files whatsoever. No .json files, no .txt files, nothing.
-4. Your output MUST be the raw JSON text returned directly in your response message — not saved anywhere.
-5. Do NOT wrap the JSON in markdown code blocks. Just output the raw JSON.
+OUTPUT RULES:
+1. Your final result MUST be a JSON object in the format shown below.
+2. Do NOT save the JSON to a file. Do NOT use save_file, write_file, or any workspace/file operation.
+3. Do NOT create any files. Return the JSON as your task result.
 
-The JSON format MUST be exactly:
-{ "courses": [{ "canvasId": "external", "name": "Field Methods: Cognition in the Wild", "code": "COGS 13", "instructor": "...", "term": "Spring 2026", "schedule": [{"dayOfWeek": "Tuesday", "startTime": "12:30", "endTime": "13:50", "location": "PETER 108", "type": "lecture"}], "assignments": [{"id": "hw1", "title": "Problem Set 1", "dueDate": "2026-04-10", "points": 50, "type": "homework"}], "syllabusText": "...", "syllabusUrl": "${externalUrl}", "externalLinks": ["https://piazza.com/class/abc123"], "description": "...", "rawNotes": "everything else you found" }] }
-
-REMEMBER: Return JSON in your response. Do NOT save to file. Do NOT use workspace.`;
+JSON format:
+{ "courses": [{ "canvasId": "external", "name": "Field Methods: Cognition in the Wild", "code": "COGS 13", "instructor": "...", "term": "Spring 2026", "schedule": [{"dayOfWeek": "Tuesday", "startTime": "12:30", "endTime": "13:50", "location": "PETER 108", "type": "lecture"}], "assignments": [{"id": "hw1", "title": "Problem Set 1", "dueDate": "2026-04-10", "points": 50, "type": "homework"}], "syllabusText": "...", "syllabusUrl": "${externalUrl}", "externalLinks": ["https://piazza.com/class/abc123"], "description": "...", "rawNotes": "everything else you found" }] }`;
 
 /**
  * Step 2: Scrape using the SAME session the user logged into.
