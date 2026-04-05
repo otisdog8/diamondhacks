@@ -196,6 +196,98 @@ export default function SettingsPage() {
           )}
         </Card>
       )}
+
+      {/* Email Reminders */}
+      <EmailSettings />
     </div>
+  );
+}
+
+// ── Email Settings sub-component ──────────────────────────────────
+
+function EmailSettings() {
+  const [email, setEmail] = useState("");
+  const [sending, setSending] = useState<string | null>(null);
+  const [result, setResult] = useState<{ type: string; message: string } | null>(null);
+
+  const sendTest = async (type: "leave" | "todo") => {
+    if (!email.trim()) {
+      setResult({ type: "error", message: "Enter your email address first." });
+      return;
+    }
+    setSending(type);
+    setResult(null);
+    try {
+      const body = type === "leave"
+        ? { type: "leave", to: email, test: false, classCode: "CSE 125", className: "Software Systems", location: "WLH 2001", startTime: "2:00 PM", walkingMinutes: 10, leaveBy: "1:50 PM" }
+        : { type: "todo", to: email, test: false, todoTitle: "Complete Problem Set 3", dueDate: "Tomorrow", classCode: "CSE 127", description: "Due by 11:59 PM" };
+
+      const res = await fetch("/api/email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      setResult({
+        type: data.success ? "success" : "error",
+        message: data.message || data.error || "Unknown result",
+      });
+    } catch {
+      setResult({ type: "error", message: "Failed to send email" });
+    } finally {
+      setSending(null);
+    }
+  };
+
+  return (
+    <Card className="p-6 space-y-4">
+      <div>
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Email Reminders</h2>
+        <p className="text-sm text-gray-500 mt-0.5">
+          Get reminded to leave for class or complete a task. Requires SMTP configuration in environment variables (disabled by default).
+        </p>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Your email address
+        </label>
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="you@ucsd.edu"
+          className="w-full max-w-xs rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+
+      <div className="flex flex-wrap gap-3">
+        <Button
+          size="sm"
+          onClick={() => sendTest("leave")}
+          disabled={sending !== null}
+        >
+          {sending === "leave" ? "Sending..." : "Test: Leave for class"}
+        </Button>
+        <Button
+          size="sm"
+          variant="secondary"
+          onClick={() => sendTest("todo")}
+          disabled={sending !== null}
+        >
+          {sending === "todo" ? "Sending..." : "Test: Todo reminder"}
+        </Button>
+      </div>
+
+      {result && (
+        <p className={`text-sm ${result.type === "success" ? "text-green-600" : "text-red-600"}`}>
+          {result.message}
+        </p>
+      )}
+
+      <p className="text-xs text-gray-400">
+        Configure SMTP via environment variables: SMTP_HOST, SMTP_USER, SMTP_PASS, EMAIL_ENABLED=true
+      </p>
+    </Card>
   );
 }
