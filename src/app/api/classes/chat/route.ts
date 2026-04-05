@@ -123,7 +123,7 @@ RULES:
 - Match assignments/todos by title if the user doesn't specify an ID
 - Return ONLY valid JSON, no markdown`;
 
-    const response = await callAI(prompt, { maxTokens: 2000 });
+    const response = await callAI(prompt, { maxTokens: 2000, model: "google/gemini-3-flash-preview" });
 
     let parsed: { reply: string; action: Record<string, unknown> | null };
     try {

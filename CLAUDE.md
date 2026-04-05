@@ -1,6 +1,6 @@
 @AGENTS.md
 
-# CanvasCal — Project Context for Claude
+# inbtwn — Project Context for Claude
 
 ## What this project is
 

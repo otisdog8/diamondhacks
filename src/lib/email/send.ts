@@ -34,12 +34,12 @@ export async function sendEmail(options: EmailOptions): Promise<{ success: boole
     return { success: false, message: "Email is disabled. Set EMAIL_ENABLED=true to enable." };
   }
 
-  const from = process.env.SMTP_FROM || process.env.SMTP_USER || "canvascal@localhost";
+  const from = process.env.SMTP_FROM || process.env.SMTP_USER || "inbtwn@localhost";
 
   try {
     const transporter = getTransporter();
     await transporter.sendMail({
-      from: `CanvasCal <${from}>`,
+      from: `inbtwn <${from}>`,
       to: options.to,
       subject: options.subject,
       text: options.text,

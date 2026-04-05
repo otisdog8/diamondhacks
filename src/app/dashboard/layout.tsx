@@ -9,7 +9,6 @@ import Link from "next/link";
 const NAV_ITEMS = [
   { label: "Today",    href: "/dashboard" },
   { label: "Schedule", href: "/dashboard/schedule" },
-  { label: "Canvas",   href: "/canvas" },
   { label: "Focus",    href: "/focus" },
   { label: "Settings", href: "/dashboard/settings" },
 ];

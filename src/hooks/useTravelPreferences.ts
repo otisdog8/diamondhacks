@@ -21,7 +21,7 @@ export interface TravelPreferences {
   skippedEventIds: string[];
 }
 
-const STORAGE_KEY = "canvascal_travel_prefs";
+const STORAGE_KEY = "inbtwn_travel_prefs";
 
 const DEFAULT_PREFS: TravelPreferences = {
   homeBase: null,

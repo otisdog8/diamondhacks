@@ -98,18 +98,18 @@ export function TodoList() {
   }
 
   return (
-    <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-5">
+    <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-5 overflow-hidden">
       <p className="text-sm font-semibold text-gray-900 dark:text-white mb-3">To-Do</p>
 
       {/* Input */}
-      <div className="flex gap-2 mb-4">
+      <div className="flex gap-2 mb-4 min-w-0">
         <input
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && addTodo()}
           placeholder="Add a task..."
-          className="flex-1 text-sm px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#1B4457]/30 transition"
+          className="flex-1 min-w-0 text-sm px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#1B4457]/30 transition"
         />
         <button
           onClick={addTodo}

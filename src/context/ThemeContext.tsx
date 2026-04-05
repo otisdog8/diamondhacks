@@ -23,7 +23,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   // Load from localStorage + system preference on mount
   useEffect(() => {
-    const stored = localStorage.getItem("canvascal_theme") as Theme | null;
+    const stored = localStorage.getItem("inbtwn_theme") as Theme | null;
     if (stored === "dark" || stored === "light") {
       setTheme(stored);
     } else if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
@@ -39,7 +39,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const toggle = useCallback(() => {
     setTheme((prev) => {
       const next = prev === "light" ? "dark" : "light";
-      localStorage.setItem("canvascal_theme", next);
+      localStorage.setItem("inbtwn_theme", next);
       return next;
     });
   }, []);

@@ -1,4 +1,4 @@
-# CanvasCal
+# inbtwn
 
 Import your Canvas LMS class schedule to Google Calendar automatically using AI-powered browser automation.
 

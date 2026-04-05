@@ -4,11 +4,11 @@
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
 <!-- END:nextjs-agent-rules -->
 
-# CanvasCal — Agent Guide
+# inbtwn — Agent Guide
 
 ## Project overview
 
-CanvasCal is a Next.js 16 App Router application that uses Browser Use (AI browser automation) to scrape Canvas LMS class schedules and push them to Google Calendar. It has a swappable data layer (JSON files for dev, MongoDB for production), hand-rolled JWT authentication, and a growing set of productivity extensions (todos, focus timer, travel reminders, study materials, lecture AI).
+inbtwn is a Next.js 16 App Router application that uses Browser Use (AI browser automation) to scrape Canvas LMS class schedules and push them to Google Calendar. It has a swappable data layer (JSON files for dev, MongoDB for production), hand-rolled JWT authentication, and a growing set of productivity extensions (todos, focus timer, travel reminders, study materials, lecture AI).
 
 ## Repository map
 

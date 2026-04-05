@@ -1,5 +1,5 @@
 // ============================================================
-// CanvasCal Extension Interfaces
+// inbtwn Extension Interfaces
 // All 5 extension providers — drop into src/lib/extensions/types.ts
 // ============================================================
 

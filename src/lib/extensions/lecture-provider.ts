@@ -40,12 +40,12 @@ async function tlFetch(path: string, options?: RequestInit) {
 import { callAI } from "@/lib/ai/openrouter";
 const callClaude = callAI;
 
-// Ensure a TwelveLabs index exists for CanvasCal (one-time setup per API key)
+// Ensure a TwelveLabs index exists for inbtwn (one-time setup per API key)
 async function ensureIndex(): Promise<string> {
   // Check for existing index
   const existing = await tlFetch("/indexes?page=1&page_limit=10");
   const found = existing?.data?.find(
-    (idx: { name: string; id: string }) => idx.name === "canvascal-lectures"
+    (idx: { name: string; id: string }) => idx.name === "inbtwn-lectures"
   );
   if (found) return found.id;
 
@@ -53,7 +53,7 @@ async function ensureIndex(): Promise<string> {
   const created = await tlFetch("/indexes", {
     method: "POST",
     body: JSON.stringify({
-      name: "canvascal-lectures",
+      name: "inbtwn-lectures",
       engines: [
         { name: "marengo2.7", options: ["visual", "conversation", "text_in_video", "logo"] },
         { name: "pegasus1.2", options: ["visual", "conversation"] },
